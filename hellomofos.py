@@ -1,7 +1,9 @@
-
+import Tkinter
+import Tkinter as tk
 
 def main():
-    print("time to do work mutherfkers")
 
+    top = Tkinter.Tk()
+    top.mainloop()
 
 main()
