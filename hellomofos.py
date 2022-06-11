@@ -1,6 +1,6 @@
 
-import sys
 import hashlib
+
 
 def check_hash(file):
     # A arbitrary (but fixed) buffer
@@ -38,11 +38,17 @@ def check_hash(file):
     return sha256.hexdigest()
 
 
+def compare_hash(file1, file2):
+    file1_hash = check_hash(file1)
+    file2_hash = check_hash(file2)
+    if file1_hash == file2_hash:
+        return True
+    else:
+        return False
+
 
 def main():
 
-    print("hello world")
-
-
+    print(compare_hash('file1.html', 'file2.html'))
 
 main()
