@@ -1,18 +1,37 @@
 
 import hashlib
+from bs4 import BeautifulSoup
+import requests
+from fake_useragent import UserAgent
+
+ua = UserAgent()
+
+class Site_watcher():
+    def __init__(self, url):
+        self._url = url
+
+    def md5_code(self):
+        # Fake user-agent
+        ua = UserAgent()
+        # Get source code
+        response = requests.get(self._url, headers={'User-Agent': ua.random})
+        soup = BeautifulSoup(response.text, "html.parser")
+        # MD5 hash of source code
+        md5_new = hashlib.md5(str(soup).encode()).hexdigest()
+        # Save file
+        with open('site_md5_new.txt', 'w') as f:
+            f.write(md5_new)
+        return md5_new
 
 
 def check_hash(file):
-    # A arbitrary (but fixed) buffer
-    # size (change accordingly)
-    # 65536 = 65536 bytes = 64 kilobytes
+    # A arbitrary (but fixed) buffer size (change accordingly) 65536 = 65536 bytes = 64 kilobytes
     BUF_SIZE = 65536
 
     # Initializing the sha256() method
     sha256 = hashlib.sha256()
 
-    # Opening the file provided as
-    # the first commandline argument
+    # Opening the file provided as the first commandline argument
     with open(file, 'rb') as f:
         while True:
             # reading data = BUF_SIZE from
@@ -47,7 +66,12 @@ def compare_hash(file1, file2):
         return False
 
 
+def compare_content(file1, file2):
+    pass
+
+
 def main():
+    URLs = []
 
     print(compare_hash('file1.html', 'file2.html'))
 
