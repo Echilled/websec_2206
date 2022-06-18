@@ -36,7 +36,7 @@ class Site_watcher():
 
 def main():
     URLs = []
-    URL = 'https://www.google.com/'
+    URL = 'http://www.beefychilled.tk/'
     # get latest hash
     SHA256_code = Site_watcher(URL).SHA256_code()
     if os.path.isfile('site_256.txt'):
@@ -45,4 +45,7 @@ def main():
             else:
                 print("site has changed")
 
-main()
+
+if __name__ == '__main__':
+    main()
+    
