@@ -36,11 +36,13 @@ class Site_watcher():
 
 def main():
     URLs = []
-    URL = 'beefychilled.tk'
+    URL = 'https://www.google.com/'
     # get latest hash
     SHA256_code = Site_watcher(URL).SHA256_code()
     if os.path.isfile('site_256.txt'):
             if filecmp.cmp('site_256.txt', 'site_256_new.txt'):
                     print('Not Updated', SHA256_code)
+            else:
+                print("site has changed")
 
 main()
