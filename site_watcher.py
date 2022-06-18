@@ -47,7 +47,7 @@ def compare_hash(URL):
     SHA256_code = Site_watcher(URL).SHA256_code()
 
     if os.path.isfile(get_hostname(URL)+'site_256.txt') and os.path.isfile(get_hostname(URL)+'site_256_new.txt'):
-            if filecmp.cmp('site_256.txt', 'site_256.txt'):
+            if filecmp.cmp(get_hostname(URL)+'site_256.txt', get_hostname(URL)+'site_256_new.txt'):
                 print('Not Updated', SHA256_code)
             else:
                 print("site has changed")
