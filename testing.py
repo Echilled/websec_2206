@@ -1,11 +1,19 @@
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+from bs4 import BeautifulSoup
 import hashlib
 import time
+import datetime
+import json
 
-DRIVER = webdriver.Chrome(ChromeDriverManager().install())
+DRIVER = webdriver.Chrome("chromedriver.exe")
 SITE = ["http://randomcolour.com/", "https://www.ledr.com/colours/white.htm", "https://www.utctime.net/"]
 INDEX = {}
+
+
+def json_hash_indexer():
+    with open("WebHash.Json", "r") as rj:
+        for line in rj.readline():
+            print(line)
 
 
 def hash_indexer():
@@ -17,6 +25,7 @@ def hash_indexer():
             except:
                 print("invalid archive")
                 continue
+
 
 def get_web_source():
     for url in SITE:
@@ -45,9 +54,38 @@ def web_hash_checker(url, md5):
 
 
 def archive_updater():
-    with open("WebHash.txt", "w") as wf:
+    with open("WebHash.txt", "w+") as wf:
         print("Updating archive")
         wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
+
+    JSON_values = []
+    J_dict = {'URLs': {}}
+    for key,val in INDEX.items():
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        JSON_tuple = (key,val, now)
+        JSON_values.append(JSON_tuple)
+    for val in JSON_values:
+        JSON_dict = Json_construct(*val)
+        J_dict['URLs'].update(JSON_dict)
+
+
+
+
+def Json_construct(id,hash,date):
+    website_dic = {id: {'properties': {}}}
+    values = [{'hash': hash}, {'archival_date': date}]
+    for val in values:
+        website_dic[id]['properties'].update(val)
+    return website_dic
+
+
+def update_json(filename):
+    with open(filename, 'r+') as file:
+        file_data = json.load(file)
+        print(type(file_data))
+        print(file_data)
+        # Need to compare the differences between old and existing url hashes, update archival time, and take
+        # into account if new URLs are added
 
 
 if __name__ == '__main__':
@@ -55,3 +93,4 @@ if __name__ == '__main__':
     # print(INDEX)
     get_web_source()
     archive_updater()
+    update_json("WebHash.Json")

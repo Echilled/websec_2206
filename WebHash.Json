@@ -1,0 +1,28 @@
+{
+    "URLs": {
+        "http://randomcolour.com/": {
+            "properties": {
+                "hash": "0db1e814aafb76749b0c4e3c4f2927cb",
+                "archival_date": "2022-06-19 22:14:29"
+            }
+        },
+        "https://www.ledr.com/colours/white.htm": {
+            "properties": {
+                "hash": "17d536f33ea589b49de723744ac676dc\n",
+                "archival_date": "2022-06-19 22:14:29"
+            }
+        },
+        "https://www.utctime.net/": {
+            "properties": {
+                "hash": "98ffa799f2a6590ed2606ddfbdc52682",
+                "archival_date": "2022-06-19 22:14:29"
+            }
+        },
+        "http://www.beefychilled.tk/": {
+            "properties": {
+                "hash": "9184975031eacc938fb33ba4c61980e7",
+                "archival_date": "2022-06-19 22:14:29"
+            }
+        }
+    }
+}
