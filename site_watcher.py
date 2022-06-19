@@ -6,6 +6,8 @@ import requests
 from fake_useragent import UserAgent
 import urllib.request
 
+import difflib
+from urllib.request import urlopen
 
 
 class Site_watcher():
@@ -67,7 +69,13 @@ def compare_hash(URL):
 def main():
     URL = 'http://www.beefychilled.tk/'
     compare_hash(URL)
-    # print_html(URL)
+    # # print_html(URL)
+    
+    r = requests.get(URL)
+    soup = BeautifulSoup(r.content, 'lxml')
+    data = soup.find("body").find("script")
+    print(data)
+
 
 if __name__ == '__main__':
     main()
