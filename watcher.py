@@ -76,11 +76,9 @@ def update_json(filename, data_dict):
     with open(filename, "w") as outfile:
         json_object = json.dumps(data_dict, indent=4)
         outfile.write(json_object)
-        # Need to compare the differences between old and existing url hashes, update archival time, and take
-        # into account if new URLs are added
 
 
-def compare_dict(dict_1, dict_2):
+def detect_changes():
     pass
 
 
