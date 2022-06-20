@@ -6,7 +6,7 @@ import datetime
 import json
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["http://randomcolour.com/", "https://www.ledr.com/colours/white.htm", "https://www.utctime.net/"]
+SITE = ["http://www.beefychilled.tk/","http://randomcolour.com/", "https://www.ledr.com/colours/white.htm", "https://www.utctime.net/", "https://google.com"]
 INDEX = {}
 
 
@@ -67,8 +67,7 @@ def archive_updater():
     for val in JSON_values:
         JSON_dict = Json_construct(*val)
         J_dict['URLs'].update(JSON_dict)
-
-
+    update_json("WebHash.Json", J_dict)
 
 
 def Json_construct(id,hash,date):
@@ -79,13 +78,16 @@ def Json_construct(id,hash,date):
     return website_dic
 
 
-def update_json(filename):
-    with open(filename, 'r+') as file:
-        file_data = json.load(file)
-        print(type(file_data))
-        print(file_data)
+def update_json(filename, data_dict):
+    with open(filename, "w") as outfile:
+        json_object = json.dumps(data_dict, indent=4)
+        outfile.write(json_object)
         # Need to compare the differences between old and existing url hashes, update archival time, and take
         # into account if new URLs are added
+
+
+def compare_dict(dict_1, dict_2):
+    pass
 
 
 if __name__ == '__main__':
@@ -93,4 +95,4 @@ if __name__ == '__main__':
     # print(INDEX)
     get_web_source()
     archive_updater()
-    update_json("WebHash.Json")
+
