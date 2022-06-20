@@ -10,12 +10,6 @@ SITE = ["http://www.beefychilled.tk/","http://randomcolour.com/", "https://www.l
 INDEX = {}
 
 
-def json_hash_indexer():
-    with open("WebHash.Json", "r") as rj:
-        for line in rj.readline():
-            print(line)
-
-
 def hash_indexer():
     with open("WebHash.txt", "r") as rf:
         for line in rf.readlines():
