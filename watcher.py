@@ -1,3 +1,6 @@
+import os
+from difflib import Differ
+from pprint import pprint
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import hashlib
@@ -78,13 +81,32 @@ def update_json(filename, data_dict):
         outfile.write(json_object)
 
 
-def detect_changes():
-    pass
+def Website_code_checker():
+    # Need to take into account first time storage
+    URL = "https://www.utctime.net/"
+    srcOld = ""
+    srcNew = ""
+    d = Differ()
+    while(1):
+        try:
+            srcOld = srcNew
+            DRIVER.get(URL)
+            time.sleep(2)
+            srcNew = DRIVER.page_source
+            if srcNew != srcOld and srcOld != "":
+                print("website change")
+
+                # can use the differ class
+            elif srcNew == srcOld:
+                print("No change")
+        except:
+            pass
+        time.sleep(20)
 
 
 if __name__ == '__main__':
-    hash_indexer()
-    # print(INDEX)
-    get_web_source()
-    archive_updater()
-
+    # hash_indexer()
+    # # print(INDEX)
+    # get_web_source()
+    # archive_updater()
+    Website_code_checker()
