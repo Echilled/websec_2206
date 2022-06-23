@@ -1,12 +1,18 @@
+import difflib
 import os
+import urllib
 from difflib import Differ
 from pprint import pprint
 from selenium import webdriver
+from lxml.html.diff import htmldiff
 from bs4 import BeautifulSoup
 import hashlib
 import time
 import datetime
 import json
+import urllib.request
+
+from selenium.webdriver.support.wait import WebDriverWait
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
 SITE = ["http://www.beefychilled.tk/","http://randomcolour.com/", "https://www.ledr.com/colours/white.htm", "https://www.utctime.net/", "https://google.com"]
@@ -81,27 +87,56 @@ def update_json(filename, data_dict):
         outfile.write(json_object)
 
 
+def Diff(li1, li2):
+    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
+
+
+def show_difference(old, new):
+    f_old = open(old)
+    old_text = f_old.readlines()
+    f_new = open(new)
+    new_text = f_new.readlines()
+    print(Diff(old_text, new_text))
+
+
 def Website_code_checker():
     # Need to take into account first time storage
-    URL = "https://www.utctime.net/"
+    whitelist = ['time']
+    URL = "http://randomcolour.com/"
     srcOld = ""
     srcNew = ""
-    d = Differ()
     while(1):
         try:
             srcOld = srcNew
             DRIVER.get(URL)
-            time.sleep(2)
-            srcNew = DRIVER.page_source
-            if srcNew != srcOld and srcOld != "":
-                print("website change")
+            WebDriverWait(DRIVER, 5)  # wait for webpage to load properly
 
-                # can use the differ class
+            srcNew = DRIVER.page_source  # get page source
+            # might need to use html files or even try beautiful soup
+            # print(srcNew)
+            # print(srcOld)
+
+            if srcNew != srcOld and srcOld == "":
+                file = open("sample.html", "w+")
+                file.write(srcNew)
+                file.close()
+
+            elif srcNew != srcOld and srcOld != "":
+                print("website change")
+                file = open("sample_new.html", "w+")
+                file.write(srcNew)
+                file.close()
+                show_difference("sample.html", "sample_new.html")
+                # os.remove("sample.html")
+                # os.remove("sample_new.html")
+                break
+
             elif srcNew == srcOld:
                 print("No change")
+
         except:
             pass
-        time.sleep(20)
+        time.sleep(10)  # polling interval
 
 
 if __name__ == '__main__':
