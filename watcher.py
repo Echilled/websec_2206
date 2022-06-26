@@ -12,6 +12,7 @@ import datetime
 import json
 import urllib.request
 
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
@@ -98,11 +99,23 @@ def show_difference(old, new):
     new_text = f_new.readlines()
     print(Diff(old_text, new_text))
 
+def ad_blocker():
+    all_iframes = DRIVER.find_elements(By.TAG_NAME, "iframe")
+    if len(all_iframes) > 0:
+        print("Ad Found\n")
+        DRIVER.execute_script("""
+            var elems = document.getElementsByTagName("iframe"); 
+            for(var i = 0, max = elems.length; i < max; i++)
+                 {
+                     elems[i].hidden=true;
+                 }
+                              """)
 
-def Website_code_checker():
+
+def Website_change_checker():
     # Need to take into account first time storage
     whitelist = ['time']
-    URL = "http://randomcolour.com/"
+    URL = "http://www.beefychilled.tk/"
     srcOld = ""
     srcNew = ""
     while(1):
@@ -110,7 +123,7 @@ def Website_code_checker():
             srcOld = srcNew
             DRIVER.get(URL)
             WebDriverWait(DRIVER, 5)  # wait for webpage to load properly
-
+            ad_blocker()
             srcNew = DRIVER.page_source  # get page source
             # might need to use html files or even try beautiful soup
             # print(srcNew)
@@ -127,8 +140,8 @@ def Website_code_checker():
                 file.write(srcNew)
                 file.close()
                 show_difference("sample.html", "sample_new.html")
-                # os.remove("sample.html")
-                # os.remove("sample_new.html")
+                os.remove("sample.html")
+                os.remove("sample_new.html")
                 break
 
             elif srcNew == srcOld:
@@ -136,7 +149,7 @@ def Website_code_checker():
 
         except:
             pass
-        time.sleep(10)  # polling interval
+        time.sleep(20)  # polling interval
 
 
 if __name__ == '__main__':
@@ -144,4 +157,4 @@ if __name__ == '__main__':
     # # print(INDEX)
     # get_web_source()
     # archive_updater()
-    Website_code_checker()
+    Website_change_checker()
