@@ -118,7 +118,6 @@ def read_fileURL(filename):
     pass
 
 
-
 def threshold_change_detect():
     pass
 
@@ -174,7 +173,8 @@ def main():
     # get_web_source()
     # archive_updater()
     # Website_change_checker()
-    url_crawled = crawler.Crawler('http://randomcolour.com/')
+    url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
+    print(url_crawled.crawled_urls)
 
 
 if __name__ == '__main__':
