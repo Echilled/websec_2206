@@ -10,6 +10,7 @@ import hashlib
 import time
 import datetime
 import json
+import crawler
 import urllib.request
 
 from selenium.webdriver.common.by import By
@@ -99,6 +100,7 @@ def show_difference(old, new):
     new_text = f_new.readlines()
     print(Diff(old_text, new_text))
 
+
 def ad_blocker():
     all_iframes = DRIVER.find_elements(By.TAG_NAME, "iframe")
     if len(all_iframes) > 0:
@@ -112,10 +114,23 @@ def ad_blocker():
                               """)
 
 
+def read_fileURL(filename):
+    pass
+
+
+
+def threshold_change_detect():
+    pass
+
+
+def white_list_check():
+    pass
+
+
 def Website_change_checker():
     # Need to take into account first time storage
     whitelist = ['time']
-    URL = "http://www.beefychilled.tk/"
+    URL = "http://randomcolour.com/"
     srcOld = ""
     srcNew = ""
     while(1):
@@ -140,8 +155,9 @@ def Website_change_checker():
                 file.write(srcNew)
                 file.close()
                 show_difference("sample.html", "sample_new.html")
-                os.remove("sample.html")
-                os.remove("sample_new.html")
+                # os.remove("sample.html")
+                # os.remove("sample_new.html")
+                # Notify
                 break
 
             elif srcNew == srcOld:
@@ -152,9 +168,14 @@ def Website_change_checker():
         time.sleep(20)  # polling interval
 
 
-if __name__ == '__main__':
+def main():
     # hash_indexer()
     # # print(INDEX)
     # get_web_source()
     # archive_updater()
-    Website_change_checker()
+    # Website_change_checker()
+    url_crawled = crawler.Crawler('http://randomcolour.com/')
+
+
+if __name__ == '__main__':
+    main()
