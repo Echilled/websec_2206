@@ -11,10 +11,12 @@ import time
 import datetime
 import json
 import crawler
+import re
 import urllib.request
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
 SITE = ["http://www.beefychilled.tk/","http://randomcolour.com/", "https://www.ledr.com/colours/white.htm", "https://www.utctime.net/", "https://google.com"]
@@ -114,10 +116,6 @@ def ad_blocker():
                               """)
 
 
-def read_fileURL(filename):
-    pass
-
-
 def threshold_change_detect():
     pass
 
@@ -167,14 +165,21 @@ def Website_change_checker():
         time.sleep(20)  # polling interval
 
 
+def clean_urls(url_list):
+    regex = re.compile(r'^.*\.(?!js$|ico$|atom$|png$)[^.]+$') # remove non-webpages
+    filtered = [i for i in url_list if regex.match(i)]
+    return filtered
+
+
 def main():
     # hash_indexer()
+    url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
     # # print(INDEX)
     # get_web_source()
     # archive_updater()
     # Website_change_checker()
-    url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
-    print(url_crawled.crawled_urls)
+
+    print(clean_urls(list((url_crawled.crawled_urls))))
 
 
 if __name__ == '__main__':
