@@ -19,7 +19,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["http://www.beefychilled.tk/","http://randomcolour.com/", "https://www.ledr.com/colours/white.htm", "https://www.utctime.net/", "https://google.com"]
+SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/"]
 INDEX = {}
 
 
@@ -40,6 +40,7 @@ def get_web_source():
         time.sleep(1)
         dom = DRIVER.page_source
         print(url, DRIVER.title)
+        page_indexer(DRIVER.page_source, DRIVER.title)
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
 
@@ -53,8 +54,12 @@ def web_hash_checker(url, md5):
         if INDEX[url].strip('\n') != digest:
             INDEX[url] = digest
             print("Website does not match previous archive")
+            page_checker(DRIVER.title)
         else:
             print("Website match previous archive")
+            os.remove(DRIVER.title + "_new.html")
+
+
     except:
         INDEX[url] = digest
         print("New webpage archived")
@@ -67,9 +72,9 @@ def archive_updater():
 
     JSON_values = []
     J_dict = {'URLs': {}}
-    for key,val in INDEX.items():
+    for key, val in INDEX.items():
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        JSON_tuple = (key,val, now)
+        JSON_tuple = (key, val, now)
         JSON_values.append(JSON_tuple)
     for val in JSON_values:
         JSON_dict = Json_construct(*val)
@@ -91,6 +96,16 @@ def update_json(filename, data_dict):
         outfile.write(json_object)
 
 
+def page_indexer(page_source, page_title):
+    if not os.path.isfile(page_title + ".html"):
+        print('New webpage code archive')
+        with open(page_title + ".html", "w+") as file:
+            file.write(page_source)
+    elif os.path.isfile(page_title + ".html"):
+        with open(page_title + "_new.html", "w+") as file:
+            file.write(page_source)
+
+
 def Diff(li1, li2):
     return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
 
@@ -101,6 +116,17 @@ def show_difference(old, new):
     f_new = open(new)
     new_text = f_new.readlines()
     print(Diff(old_text, new_text))
+
+
+def page_checker(webpage_title):
+        old = webpage_title + ".html"
+        new = webpage_title + "_new.html"
+        if os.path.isfile(old) and os.path.isfile(new):
+            show_difference(old, new)
+            os.remove(old)
+            os.rename(new, webpage_title + ".html")
+        else:
+            print('relevant files does not exist')
 
 
 def ad_blocker():
@@ -116,10 +142,6 @@ def ad_blocker():
                               """)
 
 
-def threshold_change_detect():
-    pass
-
-
 def white_list_check():
     pass
 
@@ -130,7 +152,7 @@ def Website_change_checker():
     URL = "http://randomcolour.com/"
     srcOld = ""
     srcNew = ""
-    while(1):
+    while(1): # might need to store as a file to specific change
         try:
             srcOld = srcNew
             DRIVER.get(URL)
@@ -172,13 +194,12 @@ def clean_urls(url_list):
 
 
 def main():
-    # hash_indexer()
+    hash_indexer()
     url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
-    # # print(INDEX)
-    # get_web_source()
-    # archive_updater()
+    get_web_source()
+    archive_updater()
     # Website_change_checker()
-
+    # print(list((url_crawled.crawled_urls)))
     print(clean_urls(list((url_crawled.crawled_urls))))
 
 
