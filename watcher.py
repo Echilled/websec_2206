@@ -37,6 +37,7 @@ def hash_indexer():
 def get_web_source():
     for url in SITE:
         DRIVER.get(url)
+        ad_blocker()
         time.sleep(1)
         dom = DRIVER.page_source
         print(url, DRIVER.title)
