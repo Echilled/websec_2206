@@ -34,6 +34,17 @@ def hash_indexer():
                 continue
 
 
+def json_hash_indexer():
+    with open("WebHash.Json", "r") as file:
+        try:
+            data = json.load(file)
+            for url, property in data['URLs'].items():
+                INDEX[url] = property['properties']['hash']
+                # print(properties)
+        except:
+            pass
+
+
 def get_web_source():
     for url in SITE:
         DRIVER.get(url)
@@ -67,9 +78,9 @@ def web_hash_checker(url, md5):
 
 
 def archive_updater():
-    with open("WebHash.txt", "w+") as wf:
-        print("Updating archive")
-        wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
+    # with open("WebHash.txt", "w+") as wf:
+    print("Updating archive")
+        # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
 
     JSON_values = []
     J_dict = {'URLs': {}}
@@ -124,10 +135,21 @@ def page_checker(webpage_title):
         new = webpage_title + "_new.html"
         if os.path.isfile(old) and os.path.isfile(new):
             show_difference(old, new)
-            os.remove(old)
-            os.rename(new, webpage_title + ".html")
+            decision = input('Do u accept these changes? y/n')
+            if decision.lower() == 'y':
+                os.remove(old)
+                os.rename(new, webpage_title + ".html")
+            elif decision.lower() == 'n':
+                os.remove(new)
+            else:
+                print('unrecognizable input, discarding changes')
+                os.remove(new)
         else:
             print('relevant files does not exist')
+
+
+def page_changes_listing():
+    pass
 
 
 def ad_blocker():
@@ -141,6 +163,10 @@ def ad_blocker():
                      elems[i].hidden=true;
                  }
                               """)
+
+
+def report_generation():
+    pass
 
 
 def white_list_check():
@@ -195,13 +221,12 @@ def clean_urls(url_list):
 
 
 def main():
-    hash_indexer()
-    url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
+    json_hash_indexer()
+    print(INDEX)
+    # url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
     get_web_source()
     archive_updater()
-    # Website_change_checker()
-    # print(list((url_crawled.crawled_urls)))
-    print(clean_urls(list((url_crawled.crawled_urls))))
+    # print(clean_urls(list((url_crawled.crawled_urls))))
 
 
 if __name__ == '__main__':
