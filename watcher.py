@@ -19,8 +19,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/"]
+SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/" , "https://www.utctime.net/"]
 INDEX = {}
+changes_dict = {}
 
 
 def hash_indexer():
@@ -66,7 +67,7 @@ def web_hash_checker(url, md5):
         if INDEX[url].strip('\n') != digest:
             INDEX[url] = digest
             print("Website does not match previous archive")
-            page_checker(DRIVER.title)
+            page_checker(DRIVER.title, url)
         else:
             print("Website match previous archive")
             os.remove(DRIVER.title + "_new.html")
@@ -127,14 +128,15 @@ def show_difference(old, new):
     old_text = f_old.readlines()
     f_new = open(new)
     new_text = f_new.readlines()
-    print(Diff(old_text, new_text))
+    return Diff(old_text, new_text)
 
 
-def page_checker(webpage_title):
+def page_checker(webpage_title, url):
         old = webpage_title + ".html"
         new = webpage_title + "_new.html"
         if os.path.isfile(old) and os.path.isfile(new):
-            show_difference(old, new)
+            print(show_difference(old, new))
+            changes_dict[url] = show_difference(old, new)
             decision = input('Do u accept these changes? y/n')
             if decision.lower() == 'y':
                 os.remove(old)
@@ -148,8 +150,11 @@ def page_checker(webpage_title):
             print('relevant files does not exist')
 
 
-def page_changes_listing():
-    pass
+def page_changes_listing(changes_dict):
+    print('There are '+str(len(changes_dict)) + ' urls with changes')
+    print('If you want to accept all changes, press 0')
+    decision = input('Enter you choice')
+    print(decision)
 
 
 def ad_blocker():
@@ -173,8 +178,8 @@ def white_list_check():
     pass
 
 
-def Website_change_checker():
-    # Need to take into account first time storage
+def Website_change_checker(): # depreciated alr...use page_checker instead
+
     whitelist = ['time']
     URL = "http://randomcolour.com/"
     srcOld = ""
@@ -226,6 +231,7 @@ def main():
     # url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
     get_web_source()
     archive_updater()
+    page_changes_listing(changes_dict)
     # print(clean_urls(list((url_crawled.crawled_urls))))
 
 
