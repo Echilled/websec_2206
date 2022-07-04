@@ -18,7 +18,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://time.gov/", "http://randomcolour.com/", "https://www.utctime.net/"]  # need test with same domain diff dir
+SITE = ["https://time.gov/", "http://randomcolour.com/"]  # need test with same domain diff dir
 INDEX = {}
 changes_dict = {}
 
@@ -123,14 +123,18 @@ def page_indexer(page_source, page_title):
 
 def Diff(li1, li2):
     new_changed_list = []
+    changes_list = []
     previous_list = list(set(li1) - set(li2))
     changed_list = list(set(li2) - set(li1))
-    changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
-    print(previous_list)
+    # changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
+    # print(previous_list)
     # print(changed_list)
     for change in previous_list:
         new_changed_list.append(" ".join(difflib.get_close_matches(change, changed_list, 1)))
+    print(previous_list)
     print(new_changed_list)
+    changes_list.append(previous_list)
+    changes_list.append(new_changed_list)
     return changes_list
 
 
@@ -244,6 +248,7 @@ def main():
     get_web_source()
     archive_updater()
     page_changes_listing(changes_dict)
+    print(changes_dict)
     # print(clean_urls(list((url_crawled.crawled_urls))))
 
 
