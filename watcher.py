@@ -13,13 +13,12 @@ import json
 import crawler
 import re
 import urllib.request
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/" , "https://www.utctime.net/"]
+SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/", "https://time.gov/"] # need test with same domain diff dir
 INDEX = {}
 changes_dict = {}
 
@@ -56,7 +55,6 @@ def get_web_source():
         page_indexer(DRIVER.page_source, DRIVER.title)
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
-
     DRIVER.quit()
 
 
@@ -71,11 +69,14 @@ def web_hash_checker(url, md5):
         else:
             print("Website match previous archive")
             os.remove(DRIVER.title + "_new.html")
-
-
     except:
         INDEX[url] = digest
         print("New webpage archived")
+
+
+def formatTitle(title):
+    title = title.replace("|", "")
+    return title
 
 
 def archive_updater():
@@ -110,6 +111,7 @@ def update_json(filename, data_dict):
 
 
 def page_indexer(page_source, page_title):
+    page_title = formatTitle(page_title)
     if not os.path.isfile(page_title + ".html"):
         print('New webpage code archive')
         with open(page_title + ".html", "w+") as file:
@@ -120,7 +122,12 @@ def page_indexer(page_source, page_title):
 
 
 def Diff(li1, li2):
-    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
+    previous_list = list(set(li1) - set(li2))
+    changed_list = list(set(li2) - set(li1))
+    changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
+    print(previous_list)
+    print(changed_list)
+    return changes_list
 
 
 def show_difference(old, new):
@@ -132,10 +139,10 @@ def show_difference(old, new):
 
 
 def page_checker(webpage_title, url):
+        webpage_title = formatTitle(webpage_title)
         old = webpage_title + ".html"
         new = webpage_title + "_new.html"
         if os.path.isfile(old) and os.path.isfile(new):
-            print(show_difference(old, new))
             changes_dict[url] = show_difference(old, new)
             decision = input('Do u accept these changes? y/n')
             if decision.lower() == 'y':
@@ -152,9 +159,13 @@ def page_checker(webpage_title, url):
 
 def page_changes_listing(changes_dict):
     print('There are '+str(len(changes_dict)) + ' urls with changes')
-    print('If you want to accept all changes, press 0')
-    decision = input('Enter you choice')
-    print(decision)
+    print('The URLs with changes are:')
+    for key, value in changes_dict.items():
+        print(key)
+        print(value)
+    # print('If you want to accept all changes, press 0')
+    # decision = input('Enter you choice')
+    # print(decision)
 
 
 def ad_blocker():
@@ -179,7 +190,6 @@ def white_list_check():
 
 
 def Website_change_checker(): # depreciated alr...use page_checker instead
-
     whitelist = ['time']
     URL = "http://randomcolour.com/"
     srcOld = ""
