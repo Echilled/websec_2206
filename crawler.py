@@ -92,5 +92,5 @@ class Crawler:
     
 
 
-if __name__ == '__main__':
-    Crawler('https://plainvanilla.com.sg/')
+#if __name__ == '__main__':
+#    Crawler('https://plainvanilla.com.sg/')
