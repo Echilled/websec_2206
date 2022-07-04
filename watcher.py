@@ -18,7 +18,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/", "https://time.gov/"] # need test with same domain diff dir
+SITE = ["https://time.gov/", "http://randomcolour.com/", "https://www.utctime.net/"]  # need test with same domain diff dir
 INDEX = {}
 changes_dict = {}
 
@@ -122,11 +122,15 @@ def page_indexer(page_source, page_title):
 
 
 def Diff(li1, li2):
+    new_changed_list = []
     previous_list = list(set(li1) - set(li2))
     changed_list = list(set(li2) - set(li1))
     changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
     print(previous_list)
-    print(changed_list)
+    # print(changed_list)
+    for change in previous_list:
+        new_changed_list.append(" ".join(difflib.get_close_matches(change, changed_list, 1)))
+    print(new_changed_list)
     return changes_list
 
 
@@ -160,9 +164,8 @@ def page_checker(webpage_title, url):
 def page_changes_listing(changes_dict):
     print('There are '+str(len(changes_dict)) + ' urls with changes')
     print('The URLs with changes are:')
-    for key, value in changes_dict.items():
+    for key in changes_dict.keys():
         print(key)
-        print(value)
     # print('If you want to accept all changes, press 0')
     # decision = input('Enter you choice')
     # print(decision)
@@ -171,7 +174,7 @@ def page_changes_listing(changes_dict):
 def ad_blocker():
     all_iframes = DRIVER.find_elements(By.TAG_NAME, "iframe")
     if len(all_iframes) > 0:
-        print("Ad Found\n")
+        print("Ad Found, changes detected may contain ads\n")
         DRIVER.execute_script("""
             var elems = document.getElementsByTagName("iframe"); 
             for(var i = 0, max = elems.length; i < max; i++)
@@ -237,7 +240,6 @@ def clean_urls(url_list):
 
 def main():
     json_hash_indexer()
-    print(INDEX)
     # url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
     get_web_source()
     archive_updater()
