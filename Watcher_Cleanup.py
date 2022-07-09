@@ -7,12 +7,13 @@ import datetime
 import json
 import re
 from selenium.webdriver.common.by import By
+import encrpyt_decrypt
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["http://randomcolour.com/",
-        "https://www.ledr.com/colours/white.htm"]  # need test with same domain diff dir
+SITE = ["http://randomcolour.com/", "https://time.gov/"]  # need test with same domain diff dir
 INDEX = {}
 DOM_CHANGES = {}
+APP_PASSWORD = 'happy'
 
 
 def json_hash_indexer():
@@ -178,6 +179,10 @@ def white_list_check():
     pass
 
 
+def periodic_check(time_interval):
+    pass
+
+
 def clean_urls(url_list):
     regex = re.compile(
         r'^.*\.(?!js$|ico$|atom$|png$)[^.]+$')  # remove non-webpages
@@ -186,13 +191,14 @@ def clean_urls(url_list):
 
 
 def main():
-    json_hash_indexer()
-    # url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
-    get_web_source()
-    archive_updater()
-    page_changes_listing(DOM_CHANGES)
-    print(DOM_CHANGES)
+    # json_hash_indexer()
+    # # url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
+    # get_web_source()
+    # archive_updater()
+    # page_changes_listing(DOM_CHANGES)
+    # print(DOM_CHANGES)
     # print(clean_urls(list((url_crawled.crawled_urls))))
+    print(encrpyt_decrypt.derive_key(encrpyt_decrypt.generate_salt(), "Random colour.html"))
 
 
 if __name__ == '__main__':
