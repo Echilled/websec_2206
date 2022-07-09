@@ -1,3 +1,4 @@
+import base64
 import difflib
 import os
 from selenium import webdriver
@@ -8,12 +9,13 @@ import json
 import re
 from selenium.webdriver.common.by import By
 import encrpyt_decrypt
+import time
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["http://randomcolour.com/", "https://time.gov/"]  # need test with same domain diff dir
+SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/"]  # need test with same domain diff dir
 INDEX = {}
 DOM_CHANGES = {}
-APP_PASSWORD = 'happy'
+APP_PASSWORD = 'happymother123'
 
 
 def json_hash_indexer():
@@ -37,7 +39,7 @@ def get_web_source():
         page_indexer(DRIVER.page_source, DRIVER.title)
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
-    DRIVER.quit()
+    # DRIVER.quit()
 
 
 def web_hash_checker(url, md5):
@@ -47,6 +49,7 @@ def web_hash_checker(url, md5):
         if INDEX[url].strip('\n') != digest:
             INDEX[url] = digest
             print("Website does not match previous archive")
+            archive_updater()
             page_checker(DRIVER.title, url)
         else:
             print("Website match previous archive")
@@ -179,8 +182,16 @@ def white_list_check():
     pass
 
 
-def periodic_check(time_interval):
-    pass
+def periodic_check(time_interval_in_seconds):
+    print("Polling")
+    while True:
+        try:
+                json_hash_indexer()
+                get_web_source()
+                page_changes_listing(DOM_CHANGES)
+                time.sleep(time_interval_in_seconds)
+        except Exception as e:
+            print(e)
 
 
 def clean_urls(url_list):
@@ -198,7 +209,11 @@ def main():
     # page_changes_listing(DOM_CHANGES)
     # print(DOM_CHANGES)
     # print(clean_urls(list((url_crawled.crawled_urls))))
-    print(encrpyt_decrypt.derive_key(encrpyt_decrypt.generate_salt(), "Random colour.html"))
+    # key = encrpyt_decrypt.derive_key(encrpyt_decrypt.generate_salt(), APP_PASSWORD)
+    # base64.urlsafe_b64encode(key)
+    # encrpyt_decrypt.encrypt('Random colour.html', key)
+    # encrpyt_decrypt.decrypt('Random colour.html', key)
+    periodic_check(30)
 
 
 if __name__ == '__main__':
