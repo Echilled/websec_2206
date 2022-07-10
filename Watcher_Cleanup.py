@@ -18,6 +18,8 @@ times_url_change_dict = {}
 DOM_CHANGES = {}
 APP_PASSWORD = 'happymother123'
 
+DRIVER.minimize_window()
+
 
 def json_hash_indexer():
     with open("WebHash.Json", "r") as file:
