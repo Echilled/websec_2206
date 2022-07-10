@@ -59,6 +59,7 @@ def web_hash_checker(url, md5):
     except:
         INDEX[url] = digest
         print("New webpage archived")
+        times_url_change_dict[url] = 0
 
 
 def format_title(title):
@@ -75,6 +76,7 @@ def index_change_history():
                 # print(properties)
         except Exception as e:
             print(e)
+    return times_url_change_dict
 
 
 def update_change_history():
