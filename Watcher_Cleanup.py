@@ -178,7 +178,11 @@ def report_generation():
     pass
 
 
-def white_list_check():
+def white_list_input(): # likely store in a file then retrieve the contents during check
+    pass
+
+
+def white_list_check(whitelist):
     pass
 
 
