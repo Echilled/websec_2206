@@ -49,7 +49,7 @@ def web_hash_checker(url, md5):
         print(INDEX[url].strip('\n'), digest)
         if INDEX[url].strip('\n') != digest:
             INDEX[url] = digest
-            print("Website does not match previous hash archive")  # Need user to accept before update archive
+            print("Website does not match previous hash archive")  # Need user to accept before updating archive
             page_checker(DRIVER.title, url)
             # archive_updater()
         else:
@@ -169,10 +169,10 @@ def page_changes_listing(changes_dict):
             print(key)
         print('Here are the changes:')
         print(DOM_CHANGES)
-        userinput = input("Do you accept these changes? y/n")
+        userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
         if userinput.lower() == "y":
             archive_updater()
-        if userinput.lower()== "n":
+        if userinput.lower() == "n":
             print("changes discarded")
     else:
         print("there are no changes to any URLs")
@@ -207,7 +207,7 @@ def white_list_check(whitelist):
 
 
 def periodic_check(time_interval_in_seconds):
-    print("Polling every "+str(time_interval_in_seconds)+ " seconds")
+    print("Polling every "+str(time_interval_in_seconds) + " seconds")
     while True:
         try:
                 json_hash_indexer()
