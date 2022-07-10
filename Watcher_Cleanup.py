@@ -168,7 +168,12 @@ def page_changes_listing(changes_dict):
         for key in changes_dict.keys():
             print(key)
         print('Here are the changes:')
-        print(DOM_CHANGES)
+        for key, value in DOM_CHANGES.items():
+            print(key)
+            print("Original content:")
+            print(value[0])
+            print("Changed content:")
+            print(value[1])
         userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
         if userinput.lower() == "y":
             archive_updater()
