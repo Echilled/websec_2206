@@ -12,7 +12,7 @@ import encrpyt_decrypt
 import time
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/"]  # need test with same domain diff dir
+SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/", "https://time.gov/"]  # need test with same domain diff dir
 INDEX = {}
 DOM_CHANGES = {}
 APP_PASSWORD = 'happymother123'
@@ -48,9 +48,10 @@ def web_hash_checker(url, md5):
         print(INDEX[url].strip('\n'), digest)
         if INDEX[url].strip('\n') != digest:
             INDEX[url] = digest
-            print("Website does not match previous archive")
-            archive_updater()
+            print("Website does not match previous hash archive")  # Need user to accept before update archive
             page_checker(DRIVER.title, url)
+            archive_updater()
+
         else:
             print("Website match previous archive")
             os.remove(DRIVER.title + "_new.html")
@@ -68,7 +69,6 @@ def archive_updater():
     # with open("WebHash.txt", "w+") as wf:
     print("Updating archive")
     # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
-
     JSON_values = []
     temp_dict = {'URLs': {}}
     for key, val in INDEX.items():
@@ -115,12 +115,12 @@ def Diff(li1, li2):
     # print(previous_list)
     # print(changed_list)
     for change in previous_list:
-        new_changed_list.append(
-            " ".join(difflib.get_close_matches(change, changed_list, 1)))
+        new_changed_list.append(" ".join(difflib.get_close_matches(change, changed_list, 1)))
     print(previous_list)
     print(new_changed_list)
     changes_list.append(previous_list)
     changes_list.append(new_changed_list)
+
     return changes_list
 
 
@@ -136,26 +136,31 @@ def page_checker(webpage_title, url):
     webpage_title = format_title(webpage_title)
     old = webpage_title + ".html"
     new = webpage_title + "_new.html"
-    if os.path.isfile(old) and os.path.isfile(new):
-        DOM_CHANGES[url] = show_difference(old, new)
-        decision = input('Do u accept these changes? y/n')
-        if decision.lower() == 'y':
-            os.remove(old)
-            os.rename(new, webpage_title + ".html")
-        elif decision.lower() == 'n':
-            os.remove(new)
+    try:
+        if os.path.isfile(old) and os.path.isfile(new):
+            DOM_CHANGES[url] = show_difference(old, new)
+            # decision = input('Do u accept these changes? y/n')
+            # if decision.lower() == 'y':
+            #     os.remove(old)
+            #     os.rename(new, webpage_title + ".html")
+            # elif decision.lower() == 'n':
+            #     os.remove(new)
+            # else:
+            #     print('unrecognizable input, discarding changes')
+            #     os.remove(new)
         else:
-            print('unrecognizable input, discarding changes')
-            os.remove(new)
-    else:
-        print('relevant files does not exist')
+            print('relevant files does not exist')
+    except Exception as e:
+        print(e)
 
 
 def page_changes_listing(changes_dict):
-    print('There are ' + str(len(changes_dict)) + ' urls with changes')
-    print('The URLs with changes are:')
+    print('There are ' + str(len(changes_dict)) + ' url/s with changes')
+    print('The URL/s with changes are:')
     for key in changes_dict.keys():
         print(key)
+    print('Here are the changes:')
+    print(DOM_CHANGES)
     # print('If you want to accept all changes, press 0')
     # decision = input('Enter you choice')
     # print(decision)
