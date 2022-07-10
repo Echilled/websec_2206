@@ -12,7 +12,7 @@ import encrpyt_decrypt
 import time
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://www.ledr.com/colours/white.htm", "http://randomcolour.com/", "https://time.gov/"]  # need test with same domain diff dir
+SITE = ["https://time.gov/", "https://www.ledr.com/colours/white.htm", "http://randomcolour.com/"]  # need test with same domain diff dir
 INDEX = {}
 DOM_CHANGES = {}
 APP_PASSWORD = 'happymother123'
@@ -39,6 +39,7 @@ def get_web_source():
         page_indexer(DRIVER.page_source, DRIVER.title)
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
+    page_changes_listing(DOM_CHANGES)
     # DRIVER.quit()
 
 
@@ -50,8 +51,7 @@ def web_hash_checker(url, md5):
             INDEX[url] = digest
             print("Website does not match previous hash archive")  # Need user to accept before update archive
             page_checker(DRIVER.title, url)
-            archive_updater()
-
+            # archive_updater()
         else:
             print("Website match previous archive")
             os.remove(DRIVER.title + "_new.html")
@@ -69,19 +69,26 @@ def archive_updater():
     # with open("WebHash.txt", "w+") as wf:
     print("Updating archive")
     # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
-    JSON_values = []
+    JSON_values = []   # Archive web page hash
     temp_dict = {'URLs': {}}
     for key, val in INDEX.items():
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         JSON_tuple = (key, val, now)
         JSON_values.append(JSON_tuple)
     for val in JSON_values:
-        JSON_dict = jon_construct(*val)
+        JSON_dict = json_construct(*val)
         temp_dict['URLs'].update(JSON_dict)
     update_json("WebHash.Json", temp_dict)
+    for key in DOM_CHANGES.keys():  # Archive web page code
+        DRIVER.get(key)
+        page_title = format_title(DRIVER.title)
+        old = page_title + ".html"
+        new = page_title + "_new.html"
+        os.remove(old)
+        os.rename(new, page_title + ".html")
 
 
-def jon_construct(id, hash, date):
+def json_construct(id, hash, date):
     website_dic = {id: {'properties': {}}}
     values = [{'hash': hash}, {'archival_date': date}]
     for val in values:
@@ -101,6 +108,7 @@ def page_indexer(page_source, page_title):
         print('New webpage code archive')
         with open(page_title + ".html", "w+") as file:
             file.write(page_source)
+            return True
     elif os.path.isfile(page_title + ".html"):
         with open(page_title + "_new.html", "w+") as file:
             file.write(page_source)
@@ -141,26 +149,33 @@ def page_checker(webpage_title, url):
             DOM_CHANGES[url] = show_difference(old, new)
             # decision = input('Do u accept these changes? y/n')
             # if decision.lower() == 'y':
-            #     os.remove(old)
-            #     os.rename(new, webpage_title + ".html")
+            #
             # elif decision.lower() == 'n':
             #     os.remove(new)
             # else:
             #     print('unrecognizable input, discarding changes')
             #     os.remove(new)
         else:
-            print('relevant files does not exist')
+            print('relevant files does not exist, could be first time archiving')
     except Exception as e:
         print(e)
 
 
 def page_changes_listing(changes_dict):
-    print('There are ' + str(len(changes_dict)) + ' url/s with changes')
-    print('The URL/s with changes are:')
-    for key in changes_dict.keys():
-        print(key)
-    print('Here are the changes:')
-    print(DOM_CHANGES)
+    if DOM_CHANGES:
+        print('There are ' + str(len(changes_dict)) + ' url/s with changes')
+        print('The URL/s with changes are:')
+        for key in changes_dict.keys():
+            print(key)
+        print('Here are the changes:')
+        print(DOM_CHANGES)
+        userinput = input("Do you accept these changes? y/n")
+        if userinput.lower() == "y":
+            archive_updater()
+        if userinput.lower()== "n":
+            print("changes discarded")
+    else:
+        print("there are no changes to any URLs")
     # print('If you want to accept all changes, press 0')
     # decision = input('Enter you choice')
     # print(decision)
@@ -192,12 +207,11 @@ def white_list_check(whitelist):
 
 
 def periodic_check(time_interval_in_seconds):
-    print("Polling")
+    print("Polling every "+str(time_interval_in_seconds)+ " seconds")
     while True:
         try:
                 json_hash_indexer()
                 get_web_source()
-                page_changes_listing(DOM_CHANGES)
                 time.sleep(time_interval_in_seconds)
         except Exception as e:
             print(e)
@@ -220,8 +234,6 @@ def main():
     # print(clean_urls(list((url_crawled.crawled_urls))))
     # key = encrpyt_decrypt.derive_key(encrpyt_decrypt.generate_salt(), APP_PASSWORD)
     # base64.urlsafe_b64encode(key)
-    # encrpyt_decrypt.encrypt('Random colour.html', key)
-    # encrpyt_decrypt.decrypt('Random colour.html', key)
     periodic_check(30)
 
 
