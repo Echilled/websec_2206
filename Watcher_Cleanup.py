@@ -81,11 +81,11 @@ def index_change_history():
 
 def update_change_history():
     index_change_history()
-    print(times_url_change_dict)
+    # print(times_url_change_dict)
     for key in times_url_change_dict.keys():
         if key in DOM_CHANGES:
             times_url_change_dict[key] = times_url_change_dict.get(key, 0) + 1
-    print(times_url_change_dict)
+    # print(times_url_change_dict)
 
 
 def archive_updater():
@@ -228,7 +228,7 @@ def report_generation():
     pass
 
 
-def white_list_input(): # likely store in a file then retrieve the contents during check
+def white_list_input():  # likely store in a file then retrieve the contents during check
     pass
 
 
@@ -245,6 +245,14 @@ def periodic_check(time_interval_in_seconds):
                 time.sleep(time_interval_in_seconds)
         except Exception as e:
             print(e)
+
+
+def single_check():
+    try:
+        json_hash_indexer()
+        get_web_source()
+    except Exception as e:
+        print(e)
 
 
 def clean_urls(url_list):
@@ -265,7 +273,12 @@ def main():
     # key = encrpyt_decrypt.derive_key(encrpyt_decrypt.generate_salt(), APP_PASSWORD)
     # base64.urlsafe_b64encode(key)
     # update_change_history()
-    periodic_check(30)
+    userinput = input("Press 1 for single check and 2 for periodic check:")
+    if userinput == '1':
+        single_check()
+    elif userinput == '2':
+        time_interval = int(input("Enter time check interval:"))
+        periodic_check(time_interval)
 
 
 if __name__ == '__main__':
