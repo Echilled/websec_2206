@@ -28,7 +28,7 @@ def json_hash_indexer():
             for url, property in data['URLs'].items():
                 INDEX[url] = property['properties']['hash']
                 # print(properties)
-        except:
+        except Exception as e:
             pass
 
 
@@ -62,6 +62,7 @@ def web_hash_checker(url, md5):
         INDEX[url] = digest
         print("New webpage archived")
         times_url_change_dict[url] = 0
+        archive_updater()
 
 
 def format_title(title):
