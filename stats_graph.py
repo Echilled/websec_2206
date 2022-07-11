@@ -1,27 +1,27 @@
 import Watcher_Cleanup
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def main():
-    print(Watcher_Cleanup.index_change_history())
     # x axis values
-    x = [1, 2, 3]
-    # corresponding y axis values
-    y = [2, 4, 1]
+    # creating the dataset
+    data = Watcher_Cleanup.index_change_history()
+    Watcher_Cleanup.DRIVER.quit()
+    courses = list(data.keys())
+    values = list(data.values())
 
-    # plotting the points
-    plt.plot(x, y)
+    fig = plt.figure(figsize=(10, 5))
 
-    # naming the x axis
-    plt.xlabel('x - axis')
-    # naming the y axis
-    plt.ylabel('y - axis')
+    # creating the bar plot
+    plt.bar(courses, values, color='maroon',
+            width=0.4)
 
-    # giving a title to my graph
-    plt.title('My first graph!')
-
-    # function to show the plot
+    plt.xlabel("URLs checked")
+    plt.ylabel("No. of times it's content changed")
+    plt.title("Number of times each URL changed")
     plt.show()
+
 
 if __name__ == '__main__':
     main()
