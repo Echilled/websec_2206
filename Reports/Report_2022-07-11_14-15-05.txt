@@ -1,0 +1,17 @@
+URLs checked at: 2022-07-11_14:15:05
+https://time.gov/
+Approved changes not in whitelist:
+Original content: ['\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="11">07:11:56 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="10">09:11:56 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="7">11:11:56 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="10">08:11:56 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="7">12:11:56 A.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="6">01:11:56 A.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="9">10:11:56 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="8">11:11:56 P.M.</time></div></div>\n', '\t\t\t\t\t\t<span id="myTime">02:11:53 P.M.</span><br><br>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="5">02:11:56 A.M.</time></div>\n', '\t\t\t\t\t\tYour clock is off by: <br><span id="realTimeDif">-2.495</span> s<p></p>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="-10">04:11:56 P.M.</time></div>\n', '\t\t\t\t\t\t<div class="clock text-lg"><time id="timeUTC">06:11:56 </time></div>\n', '\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="4">02:11:56 A.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="4">02:11:56 A.M.</time></div>\n']
+Changed content: ['\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="11">07:14:47 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="10">09:14:47 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="7">11:14:47 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="10">08:14:47 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="7">12:14:47 A.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="6">01:14:47 A.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="9">10:14:47 P.M.</time></div>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="8">11:14:47 P.M.</time></div></div>\n', '\t\t\t\t\t\t<span id="myTime">02:14:44 P.M.</span><br><br>\n', '\t\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="5">02:14:47 A.M.</time></div>\n', '\t\t\t\t\t\tYour clock is off by: <br><span id="realTimeDif">-2.499</span> s<p></p>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="-10">04:14:47 P.M.</time></div>\n', '\t\t\t\t\t\t<div class="clock text-lg"><time id="timeUTC">06:14:47 </time></div>\n', '\t\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="4">02:14:47 A.M.</time></div>\n', '\t\t\t\t\t\t\t\t<div class="clock time-text"><time zoneoffset="4">02:14:47 A.M.</time></div>\n']
+Number of times URL content changed up to this point:31
+
+https://www.ledr.com/colours/white.htm
+No content changes to URL
+Number of times URL content changed up to this point:0
+
+http://randomcolour.com/
+Approved changes not in whitelist:
+Original content: ['  <body bgcolor="#ee340b">\n']
+Changed content: ['  <body bgcolor="#5dacfd">\n']
+Number of times URL content changed up to this point:31
+

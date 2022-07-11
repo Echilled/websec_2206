@@ -239,9 +239,10 @@ def report_generation():
             if url in DOM_CHANGES.keys():
                 rf.write("Approved changes not in whitelist:\n")
                 rf.write("Original content: "+str(DOM_CHANGES[url][0])+"\n")
-                rf.write("Changed content: " + str(DOM_CHANGES[url][1]) + "\n\n")
+                rf.write("Changed content: " + str(DOM_CHANGES[url][1])+"\n")
             else:
-                rf.write("No content changes to URL\n\n")
+                rf.write("No content changes to URL"+"\n")
+            rf.write("Number of times URL content changed up to this point:" + str(times_url_change_dict[url])+"\n\n")
 
     rf.close()
 
