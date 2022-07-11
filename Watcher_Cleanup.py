@@ -152,8 +152,8 @@ def Diff(li1, li2):
     # print(changed_list)
     for change in previous_list:
         new_changed_list.append(" ".join(difflib.get_close_matches(change, changed_list, 1)))
-    print(previous_list)
-    print(new_changed_list)
+    # print(previous_list)
+    # print(new_changed_list)
     changes_list.append(previous_list)
     changes_list.append(new_changed_list)
 
@@ -228,7 +228,22 @@ def ad_blocker():
 
 
 def report_generation():
-    pass
+    if not os.path.isdir("Reports\\"):
+        os.mkdir("Reports\\")
+    date_time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    date_time_write = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    with open("Reports\\Report_"+date_time_now+".txt", "w") as rf:
+        rf.write("URLs checked at: "+date_time_write+"\n")
+        for url in INDEX.keys():
+            rf.write(url + '\n')
+            if url in DOM_CHANGES.keys():
+                rf.write("Approved changes not in whitelist:\n")
+                rf.write("Original content: "+str(DOM_CHANGES[url][0])+"\n")
+                rf.write("Changed content: " + str(DOM_CHANGES[url][1]) + "\n\n")
+            else:
+                rf.write("No content changes to URL\n\n")
+
+    rf.close()
 
 
 def white_list_input():  # likely store in a file then retrieve the contents during check
@@ -246,6 +261,7 @@ def periodic_check(time_interval_in_seconds):
                 json_hash_indexer()
                 get_web_source()
                 time.sleep(time_interval_in_seconds)
+                report_generation()
         except Exception as e:
             print(e)
 
@@ -279,9 +295,12 @@ def main():
     userinput = input("Press 1 for single check and 2 for periodic check:")
     if userinput == '1':
         single_check()
+        report_generation()
+        DRIVER.quit()
     elif userinput == '2':
-        time_interval = int(input("Enter time check interval:"))
+        time_interval = int(input("Enter time check interval (in seconds):"))
         periodic_check(time_interval)
+        # report_generation()
 
 
 if __name__ == '__main__':
