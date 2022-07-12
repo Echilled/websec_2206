@@ -38,7 +38,7 @@ def get_web_source(SITE_LIST):
         ad_blocker()
         dom = DRIVER.page_source
         print(url, DRIVER.title)
-        page_archiver(DRIVER.page_source, DRIVER.title)
+        page_archiver(DRIVER.page_source, DRIVER.title) # need to get code from URL first so that can compare later
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
     page_changes_listing(DOM_CHANGES)
