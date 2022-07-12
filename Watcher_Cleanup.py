@@ -29,17 +29,16 @@ def json_hash_indexer():
                 INDEX[url] = property['properties']['hash']
                 # print(properties)
         except Exception as e:
-            pass
+            print("First time archiving")
 
 
-def get_web_source():
-    for url in SITE:
+def get_web_source(SITE_LIST):
+    for url in SITE_LIST:
         DRIVER.get(url)
         ad_blocker()
-        time.sleep(1)
         dom = DRIVER.page_source
         print(url, DRIVER.title)
-        page_indexer(DRIVER.page_source, DRIVER.title)
+        page_archiver(DRIVER.page_source, DRIVER.title)
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
     page_changes_listing(DOM_CHANGES)
@@ -62,7 +61,7 @@ def web_hash_checker(url, md5):
         INDEX[url] = digest
         print("New webpage archived")
         times_url_change_dict[url] = 0
-        archive_updater()
+        archive_updater("WebHash.Json")
 
 
 def format_title(title):
@@ -70,8 +69,8 @@ def format_title(title):
     return title
 
 
-def index_change_history():
-    with open("WebHash.Json", "r") as file:
+def index_change_history(json_filename):
+    with open(json_filename, "r") as file:
         try:
             data = json.load(file)
             for url, property in data['URLs'].items():
@@ -82,8 +81,8 @@ def index_change_history():
     return times_url_change_dict
 
 
-def update_change_history():
-    index_change_history()
+def update_change_history(json_filename):
+    index_change_history(json_filename)
     # print(times_url_change_dict)
     for key in times_url_change_dict.keys():
         if key in DOM_CHANGES:
@@ -91,13 +90,13 @@ def update_change_history():
     # print(times_url_change_dict)
 
 
-def archive_updater():
+def archive_updater(json_filename):
     # with open("WebHash.txt", "w+") as wf:
     print("Updating archive")
     # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
     JSON_values = []   # Archive web page hash
     temp_dict = {'URLs': {}}
-    update_change_history()
+    update_change_history(json_filename)
     for key, val in INDEX.items():
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         changes_number = times_url_change_dict[key]
@@ -106,7 +105,7 @@ def archive_updater():
     for val in JSON_values:
         JSON_dict = json_construct(*val)
         temp_dict['URLs'].update(JSON_dict)
-    update_json("WebHash.Json", temp_dict)
+    update_json(json_filename, temp_dict)
     for key in DOM_CHANGES.keys():  # Archive web page code
         DRIVER.get(key)
         page_title = format_title(DRIVER.title)
@@ -130,7 +129,7 @@ def update_json(filename, data_dict):
         outfile.write(json_object)
 
 
-def page_indexer(page_source, page_title):
+def page_archiver(page_source, page_title):
     page_title = format_title(page_title)
     if not os.path.isfile(page_title + ".html"):
         print('New webpage code archive')
@@ -142,11 +141,11 @@ def page_indexer(page_source, page_title):
             file.write(page_source)
 
 
-def Diff(li1, li2):
+def Diff(list1, list2):
     new_changed_list = []
     changes_list = []
-    previous_list = list(set(li1) - set(li2))
-    changed_list = list(set(li2) - set(li1))
+    previous_list = list(set(list1) - set(list2))
+    changed_list = list(set(list2) - set(list1))
     # changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
     # print(previous_list)
     # print(changed_list)
@@ -160,10 +159,10 @@ def Diff(li1, li2):
     return changes_list
 
 
-def show_difference(old, new):
-    f_old = open(old)
+def show_difference(old_file, new_file):
+    f_old = open(old_file)
     old_text = f_old.readlines()
-    f_new = open(new)
+    f_new = open(new_file)
     new_text = f_new.readlines()
     return Diff(old_text, new_text)
 
@@ -173,7 +172,7 @@ def page_checker(webpage_title, url):
     old = webpage_title + ".html"
     new = webpage_title + "_new.html"
     try:
-        if os.path.isfile(old) and os.path.isfile(new):
+        if os.path.isfile(old) and os.path.isfile(new): # If files exist in the archive
             DOM_CHANGES[url] = show_difference(old, new)
             # decision = input('Do u accept these changes? y/n')
             # if decision.lower() == 'y':
@@ -189,11 +188,11 @@ def page_checker(webpage_title, url):
         print(e)
 
 
-def page_changes_listing(changes_dict):
-    if DOM_CHANGES:
-        print('There are ' + str(len(changes_dict)) + ' url/s with changes')
+def page_changes_listing(DOM_CHANGES):
+    if DOM_CHANGES: # If there are any changes to any URLs (dictionary not empty)
+        print('There are ' + str(len(DOM_CHANGES)) + ' url/s with changes')
         print('The URL/s with changes are:')
-        for key in changes_dict.keys():
+        for key in DOM_CHANGES.keys():
             print(key)
         print('Here are the changes:')
         for key, value in DOM_CHANGES.items():
@@ -204,7 +203,7 @@ def page_changes_listing(changes_dict):
             print(value[1])
         userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
         if userinput.lower() == "y":
-            archive_updater()
+            archive_updater("WebHash.Json")
         if userinput.lower() == "n":
             print("changes discarded")
     else:
@@ -227,7 +226,7 @@ def ad_blocker():
                               """)
 
 
-def report_generation():
+def report_generation(DOM_CHANGES):
     if not os.path.isdir("Reports\\"):
         os.mkdir("Reports\\")
     date_time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -260,17 +259,17 @@ def periodic_check(time_interval_in_seconds):
     while True:
         try:
                 json_hash_indexer()
-                get_web_source()
+                get_web_source(SITE)
                 time.sleep(time_interval_in_seconds)
-                report_generation()
+                report_generation(DOM_CHANGES)
         except Exception as e:
             print(e)
 
 
-def single_check():
+def single_check(SITE_LIST):
     try:
         json_hash_indexer()
-        get_web_source()
+        get_web_source(SITE_LIST)
     except Exception as e:
         print(e)
 
@@ -295,8 +294,8 @@ def main():
     # update_change_history()
     userinput = input("Press 1 for single check and 2 for periodic check:")
     if userinput == '1':
-        single_check()
-        report_generation()
+        single_check(SITE)
+        # report_generation(DOM_CHANGES)
         DRIVER.quit()
     elif userinput == '2':
         time_interval = int(input("Enter time check interval (in seconds):"))
