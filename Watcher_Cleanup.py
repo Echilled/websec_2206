@@ -38,8 +38,10 @@ def get_web_source(SITE_LIST):
         ad_blocker()
         dom = DRIVER.page_source
         print(url, DRIVER.title)
-        page_archiver(DRIVER.page_source, DRIVER.title)  # need to get code from URL first so that can compare later
         # print(BeautifulSoup(dom).prettify())
+        page_archiver(DRIVER.page_source, DRIVER.title)
+        # Need to archive all pages first even though hash might be same, incase hash different then can straight away
+        # detect what changed in the code
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
     page_changes_listing(DOM_CHANGES)
     # DRIVER.quit()
@@ -58,8 +60,8 @@ def web_hash_checker(url, md5):
             print("Website match previous archive")
             os.remove(DRIVER.title + "_new.html")
     except:
+        print("New archive")
         INDEX[url] = digest
-        print("New webpage archived")
         times_url_change_dict[url] = 0
         archive_updater("WebHash.Json")
 
@@ -167,7 +169,7 @@ def show_difference(old_file, new_file):
     return Diff(old_text, new_text)
 
 
-def page_checker(url):
+def page_checker(url):  # Check for differences between archive and existing page
         DRIVER.get(url)
         webpage_title = format_title(DRIVER.title)
         old = webpage_title + ".html"
