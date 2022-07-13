@@ -38,7 +38,7 @@ def get_web_source(SITE_LIST):
         ad_blocker()
         dom = DRIVER.page_source
         print(url, DRIVER.title)
-        page_archiver(DRIVER.page_source, DRIVER.title) # need to get code from URL first so that can compare later
+        page_archiver(DRIVER.page_source, DRIVER.title)  # need to get code from URL first so that can compare later
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
     page_changes_listing(DOM_CHANGES)
@@ -52,7 +52,7 @@ def web_hash_checker(url, md5):
         if INDEX[url].strip('\n') != digest:
             INDEX[url] = digest
             print("Website does not match previous hash archive")  # Need user to accept before updating archive
-            page_checker(DRIVER.title, url)
+            page_checker(url)
             # archive_updater()
         else:
             print("Website match previous archive")
@@ -167,25 +167,18 @@ def show_difference(old_file, new_file):
     return Diff(old_text, new_text)
 
 
-def page_checker(webpage_title, url):
-    webpage_title = format_title(webpage_title)
-    old = webpage_title + ".html"
-    new = webpage_title + "_new.html"
-    try:
-        if os.path.isfile(old) and os.path.isfile(new): # If files exist in the archive
-            DOM_CHANGES[url] = show_difference(old, new)
-            # decision = input('Do u accept these changes? y/n')
-            # if decision.lower() == 'y':
-            #
-            # elif decision.lower() == 'n':
-            #     os.remove(new)
-            # else:
-            #     print('unrecognizable input, discarding changes')
-            #     os.remove(new)
-        else:
-            print('relevant files does not exist, could be first time archiving')
-    except Exception as e:
-        print(e)
+def page_checker(url):
+        DRIVER.get(url)
+        webpage_title = format_title(DRIVER.title)
+        old = webpage_title + ".html"
+        new = webpage_title + "_new.html"
+        try:
+            if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
+                DOM_CHANGES[url] = show_difference(old, new)
+            else:
+                print('relevant files does not exist for comparison, could be first time archiving')
+        except Exception as e:
+            print(e)
 
 
 def page_changes_listing(DOM_CHANGES):
