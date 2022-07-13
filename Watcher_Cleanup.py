@@ -38,10 +38,8 @@ def get_web_source(SITE_LIST):
         ad_blocker()
         dom = DRIVER.page_source
         print(url, DRIVER.title)
+        page_archiver(DRIVER.page_source, DRIVER.title)  # need to get code from URL first so that can compare later
         # print(BeautifulSoup(dom).prettify())
-        page_archiver(DRIVER.page_source, DRIVER.title)
-        # Need to archive all pages first even though hash might be same, incase hash different then can straight away
-        # detect what changed in the code
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
     page_changes_listing(DOM_CHANGES)
     # DRIVER.quit()
@@ -60,8 +58,8 @@ def web_hash_checker(url, md5):
             print("Website match previous archive")
             os.remove(DRIVER.title + "_new.html")
     except:
-        print("New archive")
         INDEX[url] = digest
+        print("New webpage archived")
         times_url_change_dict[url] = 0
         archive_updater("WebHash.Json")
 
@@ -146,18 +144,16 @@ def page_archiver(page_source, page_title):
 def Diff(list1, list2):
     new_changed_list = []
     changes_list = []
-    previous_list = list(set(list1) - set(list2))
-    changed_list = list(set(list2) - set(list1))
+    present_in_original_list = list(set(list1) - set(list2))
+    not_present_in_original_list = list(set(list2) - set(list1))
     # changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
-    # print(previous_list)
-    # print(changed_list)
-    for change in previous_list:
-        new_changed_list.append(" ".join(difflib.get_close_matches(change, changed_list, 1)))
+    for change in present_in_original_list:
+        # arrange by closest match, however may also include stuff that is present in new/old but not in old/new
+        new_changed_list.append(" ".join(difflib.get_close_matches(change, not_present_in_original_list, 1)))
     # print(previous_list)
     # print(new_changed_list)
-    changes_list.append(previous_list)
+    changes_list.append(present_in_original_list)
     changes_list.append(new_changed_list)
-
     return changes_list
 
 
@@ -169,7 +165,7 @@ def show_difference(old_file, new_file):
     return Diff(old_text, new_text)
 
 
-def page_checker(url):  # Check for differences between archive and existing page
+def page_checker(url):
         DRIVER.get(url)
         webpage_title = format_title(DRIVER.title)
         old = webpage_title + ".html"
@@ -183,19 +179,44 @@ def page_checker(url):  # Check for differences between archive and existing pag
             print(e)
 
 
+def get_removed_content(changed_list, original_list):
+    empty_element = ''
+    indexes = [i for i in range(len(changed_list)) if changed_list[i] == empty_element]
+    if str(indexes) == '[]':
+        return False
+    elif str(indexes) != '[]':
+        selected_elements = [original_list[index] for index in indexes]
+        return selected_elements
+
+
+def get_added_content(changed_list, original_list):
+    empty_element = ''
+    indexes = [i for i in range(len(original_list)) if original_list[i] == empty_element]
+    if str(indexes) == '[]':
+        return False
+    elif str(indexes) != '[]':
+        selected_elements = [changed_list[index] for index in indexes]
+        return selected_elements
+
+
 def page_changes_listing(DOM_CHANGES):
     if DOM_CHANGES: # If there are any changes to any URLs (dictionary not empty)
         print('There are ' + str(len(DOM_CHANGES)) + ' url/s with changes')
         print('The URL/s with changes are:')
         for key in DOM_CHANGES.keys():
             print(key)
-        print('Here are the changes:')
+        print('Here are the changes, there might be new content added or removed.:')
         for key, value in DOM_CHANGES.items():
             print('\n', key)
             print("Original content:")
             print(value[0])
-            print("Changed content:")
+            print("Changed:")
             print(value[1])
+            print("Removed content:")
+            if(get_removed_content(value[1], value[0])) is False:
+                print("There is no removed content")
+            else:
+                print(get_removed_content(value[1], value[0]))
         userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
         if userinput.lower() == "y":
             archive_updater("WebHash.Json")
@@ -233,7 +254,10 @@ def report_generation(DOM_CHANGES):
             if url in DOM_CHANGES.keys():
                 rf.write("Approved changes not in whitelist:\n")
                 rf.write("Original content: "+str(DOM_CHANGES[url][0])+"\n")
-                rf.write("Changed content: " + str(DOM_CHANGES[url][1])+"\n")
+                rf.write("Changed/removed content: " + str(DOM_CHANGES[url][1])+"\n")
+                if get_removed_content(DOM_CHANGES[url][1], DOM_CHANGES[url][0]) is not False:
+                    rf.write("Content Removed: " + str(get_removed_content(DOM_CHANGES[url][1], DOM_CHANGES[url][0])))
+                    rf.write("\n")
             else:
                 rf.write("No content changes to URL"+"\n")
             rf.write("Number of times URL content changed up to this point:" + str(times_url_change_dict[url])+"\n\n")
@@ -255,8 +279,9 @@ def periodic_check(time_interval_in_seconds):
         try:
                 json_hash_indexer()
                 get_web_source(SITE)
+                # report_generation(DOM_CHANGES)
+                print("finish execution round, waiting interval....To stop just close this program")
                 time.sleep(time_interval_in_seconds)
-                report_generation(DOM_CHANGES)
         except Exception as e:
             print(e)
 
@@ -265,6 +290,7 @@ def single_check(SITE_LIST):
     try:
         json_hash_indexer()
         get_web_source(SITE_LIST)
+        report_generation(DOM_CHANGES)
     except Exception as e:
         print(e)
 
