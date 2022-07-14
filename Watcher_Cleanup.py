@@ -39,7 +39,9 @@ def get_web_source(SITE_LIST):
         ad_blocker()
         dom = DRIVER.page_source
         print(url, DRIVER.title)
-        page_archiver(DRIVER.page_source, DRIVER.title)  # need to get code from URL first so that can compare later
+        page_archiver(DRIVER.page_source, DRIVER.title)
+        # need to get code from URL first so that can compare later if there are any changes
+
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
     page_changes_listing(DOM_CHANGES)
@@ -59,6 +61,7 @@ def web_hash_checker(url, md5):
             print("Website match previous archive")
             os.remove(DRIVER.title + "_new.html")
     except:
+        # First time archiving
         INDEX[url] = digest
         print("New webpage archived")
         times_url_change_dict[url] = 0
@@ -133,11 +136,12 @@ def update_json(filename, data_dict):
 def page_archiver(page_source, page_title):
     page_title = format_title(page_title)
     if not os.path.isfile(page_title + ".html"):
-        print('New webpage code archive')
+        print('First time webpage code archive')
         with open(page_title + ".html", "w+") as file:
             file.write(page_source)
             return True
     elif os.path.isfile(page_title + ".html"):
+        print('New webpage code archive, will use it for comparison later')
         with open(page_title + "_new.html", "w+") as file:
             file.write(page_source)
 
@@ -175,7 +179,7 @@ def page_checker(url):
             if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
                 DOM_CHANGES[url] = show_difference(old, new)
             else:
-                print('relevant files does not exist for comparison, could be first time archiving')
+                print('relevant files does not exist for comparison, could be first time archiving webpage code')
         except Exception as e:
             print(e)
 
@@ -278,6 +282,7 @@ def periodic_check(time_interval_in_seconds):
     print("Polling every "+str(time_interval_in_seconds) + " seconds")
     while True:
         try:
+
                 json_hash_indexer()
                 get_web_source(SITE)
                 # report_generation(DOM_CHANGES)
@@ -303,46 +308,6 @@ def clean_urls(url_list):
     return filtered
 
 
-def json_verifier(json_filename, decryption_password=123, ):
-    properties_tuple = ("hash", "archival_date", "number of times URL content change")
-    try:
-        # json_filename = decrypt_file(json_filename, decryption_password)
-        with open(json_filename, "r") as j_file:
-            data = json.load(j_file)
-            if type(data) is not dict or "URLs" not in data.keys():
-                print("Ensure input file is in the correct format")
-                return False
-            else:
-                for url, properties in data["URLs"].items():
-                    if not validator.is_valid_url(url):
-                        print("URLs may be missing or not in correct format, please check")
-                        return False
-                    key, value = list(properties.items())[0]
-                    if key != 'properties':
-                        print("properties for " + url + " not found, ensure file is in correct format")
-                        return False
-                    else:
-                        if not {"hash", "archival_date", "number of times URL content change"} \
-                               <= list(properties.values())[0].keys():
-                            print("The missing keys for " + url + " are")
-                            out = [k for k in properties_tuple if k not in list(properties.values())[0].keys()]
-                            print(out)
-                            print("Please ensure these properties are present")
-                            return False
-                        else:
-                            print("checks completed")
-                            return True
-                        # prop_values = list(properties.values())[0].keys()
-                        # print(list(prop_values))
-
-    except ValueError as e:
-        print("Invalid json")
-        print(e)
-    except TypeError as t:
-        print("Invalid json")
-        print(t)
-
-
 def main():
     # json_hash_indexer()
     # # url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
@@ -359,9 +324,11 @@ def main():
         single_check(SITE)
         # report_generation(DOM_CHANGES)
         DRIVER.quit()
+
     elif userinput == '2':
         time_interval = int(input("Enter time check interval (in seconds):"))
         periodic_check(time_interval)
+
         # report_generation()
 
 
