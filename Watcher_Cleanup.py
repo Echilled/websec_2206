@@ -8,6 +8,7 @@ import datetime
 import json
 import re
 from selenium.webdriver.common.by import By
+import validator
 import encrpyt_decrypt
 import time
 
@@ -300,6 +301,46 @@ def clean_urls(url_list):
         r'^.*\.(?!js$|ico$|atom$|png$)[^.]+$')  # remove non-webpages
     filtered = [i for i in url_list if regex.match(i)]
     return filtered
+
+
+def json_verifier(json_filename, decryption_password=123, ):
+    properties_tuple = ("hash", "archival_date", "number of times URL content change")
+    try:
+        # json_filename = decrypt_file(json_filename, decryption_password)
+        with open(json_filename, "r") as j_file:
+            data = json.load(j_file)
+            if type(data) is not dict or "URLs" not in data.keys():
+                print("Ensure input file is in the correct format")
+                return False
+            else:
+                for url, properties in data["URLs"].items():
+                    if not validator.is_valid_url(url):
+                        print("URLs may be missing or not in correct format, please check")
+                        return False
+                    key, value = list(properties.items())[0]
+                    if key != 'properties':
+                        print("properties for " + url + " not found, ensure file is in correct format")
+                        return False
+                    else:
+                        if not {"hash", "archival_date", "number of times URL content change"} \
+                               <= list(properties.values())[0].keys():
+                            print("The missing keys for " + url + " are")
+                            out = [k for k in properties_tuple if k not in list(properties.values())[0].keys()]
+                            print(out)
+                            print("Please ensure these properties are present")
+                            return False
+                        else:
+                            print("checks completed")
+                            return True
+                        # prop_values = list(properties.values())[0].keys()
+                        # print(list(prop_values))
+
+    except ValueError as e:
+        print("Invalid json")
+        print(e)
+    except TypeError as t:
+        print("Invalid json")
+        print(t)
 
 
 def main():
