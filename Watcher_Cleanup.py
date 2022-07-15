@@ -40,7 +40,8 @@ def get_web_source(SITE_LIST):
         dom = DRIVER.page_source
         print(url, DRIVER.title)
         page_archiver(DRIVER.page_source, DRIVER.title)
-        # need to get code from URL first so that can compare later if there are any changes
+        # need to get code from URL first so that can compare later if there are any changes,
+        # it supports first time archiving also
 
         # print(BeautifulSoup(dom).prettify())
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
