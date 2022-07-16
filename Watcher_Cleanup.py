@@ -142,7 +142,7 @@ def page_archiver(page_source, page_title):
             file.write(page_source)
             return True
     elif os.path.isfile(page_title + ".html"):
-        print('New webpage code archive, will use it for comparison later')
+        print('changed webpage code archived, will use it for comparison later')
         with open(page_title + "_new.html", "w+") as file:
             file.write(page_source)
 
