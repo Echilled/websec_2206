@@ -9,11 +9,11 @@ import json
 import re
 from selenium.webdriver.common.by import By
 import validator
-import encrpyt_decrypt
 import time
 
 DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://time.gov/", "https://www.ledr.com/colours/white.htm", "http://randomcolour.com/"]  # need test with same domain diff dir
+SITE = ["https://time.gov/", "https://www.ledr.com/colours/white.htm",
+        "http://randomcolour.com/"]  # need test with same domain diff dir
 INDEX = {}
 times_url_change_dict = {}
 DOM_CHANGES = {}
@@ -99,7 +99,7 @@ def archive_updater(json_filename):
     # with open("WebHash.txt", "w+") as wf:
     print("Updating archive")
     # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
-    JSON_values = []   # Archive web page hash
+    JSON_values = []  # Archive web page hash
     temp_dict = {'URLs': {}}
     update_change_history(json_filename)
     for key, val in INDEX.items():
@@ -147,6 +147,28 @@ def page_archiver(page_source, page_title):
             file.write(page_source)
 
 
+def show_webpage_code_diff(DOM_CHANGES):
+    if DOM_CHANGES:  # If there are any changes to any URLs (dictionary not empty)
+        print('There are ' + str(len(DOM_CHANGES)) + ' url/s with changes')
+        print('The URL/s with changes are:')
+        for key in DOM_CHANGES.keys():
+            print(key)
+        print('Here are the changes, there might be new content added or removed.:')
+        for key, value in DOM_CHANGES.items():
+            print('\n', key)
+            print("Original content:")
+            print(value[0])
+            print("Changed:")
+            print(value[1])
+            print("Removed content:")
+            if (get_removed_content(value[1], value[0])) is False:
+                print("There is no removed content")
+            else:
+                print(get_removed_content(value[1], value[0]))
+    else:
+        print("there are no changes to any URLs")
+
+
 def Diff(list1, list2):
     new_changed_list = []
     changes_list = []
@@ -172,17 +194,17 @@ def show_difference(old_file, new_file):
 
 
 def page_checker(url):
-        DRIVER.get(url)
-        webpage_title = format_title(DRIVER.title)
-        old = webpage_title + ".html"
-        new = webpage_title + "_new.html"
-        try:
-            if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
-                DOM_CHANGES[url] = show_difference(old, new)
-            else:
-                print('relevant files does not exist for comparison, could be first time archiving webpage code')
-        except Exception as e:
-            print(e)
+    DRIVER.get(url)
+    webpage_title = format_title(DRIVER.title)
+    old = webpage_title + ".html"
+    new = webpage_title + "_new.html"
+    try:
+        if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
+            DOM_CHANGES[url] = show_difference(old, new)
+        else:
+            print('relevant files does not exist for comparison, could be first time archiving webpage code')
+    except Exception as e:
+        print(e)
 
 
 def get_removed_content(changed_list, original_list):
@@ -206,33 +228,17 @@ def get_added_content(changed_list, original_list):
 
 
 def page_changes_listing(DOM_CHANGES):
-    if DOM_CHANGES: # If there are any changes to any URLs (dictionary not empty)
-        print('There are ' + str(len(DOM_CHANGES)) + ' url/s with changes')
-        print('The URL/s with changes are:')
-        for key in DOM_CHANGES.keys():
-            print(key)
-        print('Here are the changes, there might be new content added or removed.:')
-        for key, value in DOM_CHANGES.items():
-            print('\n', key)
-            print("Original content:")
-            print(value[0])
-            print("Changed:")
-            print(value[1])
-            print("Removed content:")
-            if(get_removed_content(value[1], value[0])) is False:
-                print("There is no removed content")
-            else:
-                print(get_removed_content(value[1], value[0]))
-        userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
-        if userinput.lower() == "y":
-            archive_updater("WebHash.Json")
-        if userinput.lower() == "n":
-            print("changes discarded")
-    else:
-        print("there are no changes to any URLs")
-    # print('If you want to accept all changes, press 0')
-    # decision = input('Enter you choice')
-    # print(decision)
+    show_webpage_code_diff(DOM_CHANGES)
+    userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
+    if userinput.lower() == "y":
+        archive_updater("WebHash.Json")
+    if userinput.lower() == "n":
+        print("changes discarded")
+
+
+# print('If you want to accept all changes, press 0')
+# decision = input('Enter you choice')
+# print(decision)
 
 
 def ad_blocker():
@@ -253,20 +259,20 @@ def report_generation(DOM_CHANGES):
         os.mkdir("Reports\\")
     date_time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     date_time_write = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    with open("Reports\\Report_"+date_time_now+".txt", "w") as rf:
-        rf.write("URLs checked at: "+date_time_write+"\n")
+    with open("Reports\\Report_" + date_time_now + ".txt", "w") as rf:
+        rf.write("URLs checked at: " + date_time_write + "\n")
         for url in INDEX.keys():
             rf.write(url + '\n')
             if url in DOM_CHANGES.keys():
                 rf.write("Approved changes not in whitelist:\n")
-                rf.write("Original content: "+str(DOM_CHANGES[url][0])+"\n")
-                rf.write("Changed/removed content: " + str(DOM_CHANGES[url][1])+"\n")
+                rf.write("Original content: " + str(DOM_CHANGES[url][0]) + "\n")
+                rf.write("Changed/removed content: " + str(DOM_CHANGES[url][1]) + "\n")
                 if get_removed_content(DOM_CHANGES[url][1], DOM_CHANGES[url][0]) is not False:
                     rf.write("Content Removed: " + str(get_removed_content(DOM_CHANGES[url][1], DOM_CHANGES[url][0])))
                     rf.write("\n")
             else:
-                rf.write("No content changes to URL"+"\n")
-            rf.write("Number of times URL content changed up to this point:" + str(times_url_change_dict[url])+"\n\n")
+                rf.write("No content changes to URL" + "\n")
+            rf.write("Number of times URL content changed up to this point:" + str(times_url_change_dict[url]) + "\n\n")
 
     rf.close()
 
@@ -280,15 +286,15 @@ def white_list_check(whitelist):
 
 
 def periodic_check(time_interval_in_seconds):
-    print("Polling every "+str(time_interval_in_seconds) + " seconds")
+    print("Polling every " + str(time_interval_in_seconds) + " seconds")
     while True:
         try:
 
-                json_hash_indexer()
-                get_web_source(SITE)
-                # report_generation(DOM_CHANGES)
-                print("finish execution round, waiting interval....To stop just close this program")
-                time.sleep(time_interval_in_seconds)
+            json_hash_indexer()
+            get_web_source(SITE)
+            # report_generation(DOM_CHANGES)
+            print("finish execution round, waiting interval....To stop just close this program")
+            time.sleep(time_interval_in_seconds)
         except Exception as e:
             print(e)
 
@@ -329,8 +335,7 @@ def main():
     elif userinput == '2':
         time_interval = int(input("Enter time check interval (in seconds):"))
         periodic_check(time_interval)
-
-        # report_generation()
+        # report_generation(DOM_CHANGES)
 
 
 if __name__ == '__main__':
