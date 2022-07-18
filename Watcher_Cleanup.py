@@ -62,6 +62,7 @@ def web_hash_checker(url, md5, INDEX, json_file):
             try:
                 if "archive\\"+DRIVER.title + "_new.html":
                     os.remove("archive\\"+DRIVER.title + "_new.html")
+                    print(url + " archive will not change")
             except FileNotFoundError:
                 print(url + " archive will not change")
     except Exception as e:
