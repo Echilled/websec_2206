@@ -42,15 +42,14 @@ def get_web_source(SITE_LIST):
         page_archiver(DRIVER.page_source, DRIVER.title)
         # need to get code from URL first so that can compare later if there are any changes,
         # it supports first time archiving also
-        web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX)
+        web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX, "archive/WebHash.Json")
         # print(BeautifulSoup(dom).prettify())
     # page_changes_listing(DOM_CHANGES)
     show_webpage_code_diff(DOM_CHANGES)
     # DRIVER.quit()
 
 
-def web_hash_checker(url, md5, INDEX):
-
+def web_hash_checker(url, md5, INDEX, json_file):
     digest = md5.hexdigest()
     try:
         if INDEX[url][0].strip('\n') != digest:
@@ -60,14 +59,17 @@ def web_hash_checker(url, md5, INDEX):
             # archive_updater()
         else:
             print("Website match previous archive")
-            os.remove(DRIVER.title + "_new.html")
-    except:
+            try:
+                if "archive\\"+DRIVER.title + "_new.html":
+                    os.remove("archive\\"+DRIVER.title + "_new.html")
+            except FileNotFoundError:
+                print(url + " archive will not change")
+    except Exception as e:
         # First time archiving
-        print("exception is thrown!!!")
         INDEX[url][0] = digest
         print("New webpage archived")
         times_url_change_dict[url] = 0
-        archive_updater("WebHash.Json")
+        # archive_updater(json_file)
 
 
 def format_title(title):
@@ -116,10 +118,10 @@ def archive_updater(json_filename):
         # print(DOM_CHANGES.keys())
         DRIVER.get(key)
         page_title = format_title(DRIVER.title)
-        old = page_title + ".html"
-        new = page_title + "_new.html"
+        old = "archive\\"+page_title + ".html"
+        new = "archive\\"+page_title + "_new.html"
         os.remove(old)
-        os.rename(new, page_title + ".html")
+        os.rename(new, "archive\\"+page_title + ".html")
 
 
 def json_construct(id, hash, date, times_it_changed):
@@ -138,14 +140,13 @@ def update_json(filename, data_dict):
 
 def page_archiver(page_source, page_title):
     page_title = format_title(page_title)
-    if not os.path.isfile(page_title + ".html"):
+    if not os.path.isfile("archive\\"+page_title + ".html"):
         print('First time webpage code archive')
-        with open(page_title + ".html", "w+") as file:
+        with open("archive\\"+page_title + ".html", "w+") as file:
             file.write(page_source)
-            return True
-    elif os.path.isfile(page_title + ".html"):
+    elif os.path.isfile("archive\\"+page_title + ".html"):
         print('changed webpage code archived, will use it for comparison later')
-        with open(page_title + "_new.html", "w+") as file:
+        with open("archive\\"+page_title + "_new.html", "w+") as file:
             file.write(page_source)
 
 
@@ -198,8 +199,8 @@ def show_difference(old_file, new_file):
 def page_checker(url):
     DRIVER.get(url)
     webpage_title = format_title(DRIVER.title)
-    old = webpage_title + ".html"
-    new = webpage_title + "_new.html"
+    old = "archive\\"+webpage_title + ".html"
+    new = "archive\\"+webpage_title + "_new.html"
     try:
         if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
             DOM_CHANGES[url] = show_difference(old, new)
@@ -233,7 +234,7 @@ def page_changes_listing(DOM_CHANGES):
     show_webpage_code_diff(DOM_CHANGES)
     userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
     if userinput.lower() == "y":
-        archive_updater("WebHash.Json")
+        archive_updater("archive\WebHash.Json")
     if userinput.lower() == "n":
         print("changes discarded")
 
@@ -304,7 +305,7 @@ def periodic_check(time_interval_in_seconds):
 def single_check(SITE_LIST):
     try:
         # json_hash_indexer()
-        get_web_source(SITE_LIST)
+        get_web_source(list(SITE_LIST))
         # report_generation(DOM_CHANGES)
     except Exception as e:
         print(e)
