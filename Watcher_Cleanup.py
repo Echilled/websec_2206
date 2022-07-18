@@ -41,7 +41,8 @@ def get_web_source(SITE_LIST):
         print(url, DRIVER.title)
         page_archiver(DRIVER.page_source, DRIVER.title)
         # need to get code from URL first so that can compare later if there are any changes,
-        # it supports first time archiving also
+        # it supports first time archiving also, you can run this on its own to archive html
+        
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX, "archive/WebHash.Json")
         # print(BeautifulSoup(dom).prettify())
     # page_changes_listing(DOM_CHANGES)
@@ -55,13 +56,13 @@ def web_hash_checker(url, md5, INDEX, json_file):
         if INDEX[url][0].strip('\n') != digest:
             INDEX[url][0] = digest
             print("Website does not match previous hash archive")  # Need user to accept before updating archive
-            page_checker(url)
+            page_checker(url)  # function to run if hash is not the same
             # archive_updater()
         else:
             print("Website match previous archive")
             try:
                 if "archive\\"+DRIVER.title + "_new.html":
-                    os.remove("archive\\"+DRIVER.title + "_new.html")
+                    os.remove("archive\\" + DRIVER.title + "_new.html")
                     print(url + " archive will not change")
             except FileNotFoundError:
                 print(url + " archive will not change")
