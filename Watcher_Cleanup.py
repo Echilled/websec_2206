@@ -23,7 +23,7 @@ DRIVER.minimize_window()
 
 
 def json_hash_indexer():
-    with open("WebHash.Json", "r") as file:
+    with open("archive/WebHash.Json", "r") as file:
         try:
             data = json.load(file)
             for url, property in data['URLs'].items():
@@ -42,19 +42,19 @@ def get_web_source(SITE_LIST):
         page_archiver(DRIVER.page_source, DRIVER.title)
         # need to get code from URL first so that can compare later if there are any changes,
         # it supports first time archiving also
-
+        web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX)
         # print(BeautifulSoup(dom).prettify())
-        web_hash_checker(url, hashlib.md5(dom.encode("utf-8")))
-    page_changes_listing(DOM_CHANGES)
+    # page_changes_listing(DOM_CHANGES)
+    show_webpage_code_diff(DOM_CHANGES)
     # DRIVER.quit()
 
 
-def web_hash_checker(url, md5):
+def web_hash_checker(url, md5, INDEX):
+
     digest = md5.hexdigest()
     try:
-        print(INDEX[url].strip('\n'), digest)
-        if INDEX[url].strip('\n') != digest:
-            INDEX[url] = digest
+        if INDEX[url][0].strip('\n') != digest:
+            INDEX[url][0] = digest
             print("Website does not match previous hash archive")  # Need user to accept before updating archive
             page_checker(url)
             # archive_updater()
@@ -63,7 +63,8 @@ def web_hash_checker(url, md5):
             os.remove(DRIVER.title + "_new.html")
     except:
         # First time archiving
-        INDEX[url] = digest
+        print("exception is thrown!!!")
+        INDEX[url][0] = digest
         print("New webpage archived")
         times_url_change_dict[url] = 0
         archive_updater("WebHash.Json")
@@ -105,13 +106,14 @@ def archive_updater(json_filename):
     for key, val in INDEX.items():
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         changes_number = times_url_change_dict[key]
-        JSON_tuple = (key, val, now, changes_number)
+        JSON_tuple = (key, val[0], now, changes_number)
         JSON_values.append(JSON_tuple)
     for val in JSON_values:
         JSON_dict = json_construct(*val)
         temp_dict['URLs'].update(JSON_dict)
     update_json(json_filename, temp_dict)
-    for key in DOM_CHANGES.keys():  # Archive web page code
+    for key in list(DOM_CHANGES.keys()):  # Archive web page code
+        # print(DOM_CHANGES.keys())
         DRIVER.get(key)
         page_title = format_title(DRIVER.title)
         old = page_title + ".html"
@@ -301,9 +303,9 @@ def periodic_check(time_interval_in_seconds):
 
 def single_check(SITE_LIST):
     try:
-        json_hash_indexer()
+        # json_hash_indexer()
         get_web_source(SITE_LIST)
-        report_generation(DOM_CHANGES)
+        # report_generation(DOM_CHANGES)
     except Exception as e:
         print(e)
 
