@@ -42,7 +42,7 @@ def get_web_source(SITE_LIST):
         page_archiver(DRIVER.page_source, DRIVER.title)
         # need to get code from URL first so that can compare later if there are any changes,
         # it supports first time archiving also, you can run this on its own to archive html
-        
+
         web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX, "archive/WebHash.Json")
         # print(BeautifulSoup(dom).prettify())
     # page_changes_listing(DOM_CHANGES)
@@ -61,7 +61,7 @@ def web_hash_checker(url, md5, INDEX, json_file):
         else:
             print("Website match previous archive")
             try:
-                if "archive\\"+DRIVER.title + "_new.html":
+                if "archive\\" + DRIVER.title + "_new.html":
                     os.remove("archive\\" + DRIVER.title + "_new.html")
                     print(url + " archive will not change")
             except FileNotFoundError:
@@ -120,10 +120,10 @@ def archive_updater(json_filename):
         # print(DOM_CHANGES.keys())
         DRIVER.get(key)
         page_title = format_title(DRIVER.title)
-        old = "archive\\"+page_title + ".html"
-        new = "archive\\"+page_title + "_new.html"
+        old = "archive\\" + page_title + ".html"
+        new = "archive\\" + page_title + "_new.html"
         os.remove(old)
-        os.rename(new, "archive\\"+page_title + ".html")
+        os.rename(new, "archive\\" + page_title + ".html")
 
 
 def json_construct(id, hash, date, times_it_changed):
@@ -135,20 +135,26 @@ def json_construct(id, hash, date, times_it_changed):
 
 
 def update_json(filename, data_dict):
+    with open(filename, "r") as rfile:
+        archived_history = json.load(rfile)
+        for key, value in archived_history['URLs'].items():
+            if key in data_dict['URLs'].keys():
+                archived_history['URLs'][key] = data_dict['URLs'][key]
+        json_object = json.dumps(archived_history, indent=4)
+        rfile.close()
     with open(filename, "w") as outfile:
-        json_object = json.dumps(data_dict, indent=4)
         outfile.write(json_object)
 
 
 def page_archiver(page_source, page_title):
     page_title = format_title(page_title)
-    if not os.path.isfile("archive\\"+page_title + ".html"):
+    if not os.path.isfile("archive\\" + page_title + ".html"):
         print('First time webpage code archive')
-        with open("archive\\"+page_title + ".html", "w+") as file:
+        with open("archive\\" + page_title + ".html", "w+") as file:
             file.write(page_source)
-    elif os.path.isfile("archive\\"+page_title + ".html"):
+    elif os.path.isfile("archive\\" + page_title + ".html"):
         print('changed webpage code archived, will use it for comparison later')
-        with open("archive\\"+page_title + "_new.html", "w+") as file:
+        with open("archive\\" + page_title + "_new.html", "w+") as file:
             file.write(page_source)
 
 
@@ -201,8 +207,8 @@ def show_difference(old_file, new_file):
 def page_checker(url):
     DRIVER.get(url)
     webpage_title = format_title(DRIVER.title)
-    old = "archive\\"+webpage_title + ".html"
-    new = "archive\\"+webpage_title + "_new.html"
+    old = "archive\\" + webpage_title + ".html"
+    new = "archive\\" + webpage_title + "_new.html"
     try:
         if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
             DOM_CHANGES[url] = show_difference(old, new)
