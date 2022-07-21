@@ -1,354 +1,347 @@
-import base64
-import difflib
-import os
-from selenium import webdriver
-import hashlib
-import time
-import datetime
-import json
-import re
-from selenium.webdriver.common.by import By
-import validator
-import time
+import PySimpleGUI as PySG
 
-DRIVER = webdriver.Chrome("chromedriver.exe")
-SITE = ["https://time.gov/", "https://www.ledr.com/colours/white.htm",
-        "http://randomcolour.com/"]  # need test with same domain diff dir
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, FigureCanvasAgg
+from matplotlib.figure import Figure
+import PySimpleGUI as sg
+import time
+import os
+import matplotlib
+matplotlib.use('TkAgg')
+
+import validator as vad
+import pyperclip
+import Watcher_Cleanup
+import parse_json
+import indexer
+import stats_graph
+figure_agg = None
+
+
+VERSION = "SiteWatch v0.1"
+# DRIVER = webdriver.Chrome("chromedriver.exe")
 INDEX = {}
 times_url_change_dict = {}
 DOM_CHANGES = {}
-APP_PASSWORD = 'happymother123'
+APP_PASSWORD = "happymother123"
 
-DRIVER.minimize_window()
-
-
-def json_hash_indexer():
-    with open("archive/WebHash.Json", "r") as file:
-        try:
-            data = json.load(file)
-            for url, property in data['URLs'].items():
-                INDEX[url] = property['properties']['hash']
-                # print(properties)
-        except Exception as e:
-            print("First time archiving")
+# DRIVER.minimize_window()
 
 
-def get_web_source(SITE_LIST):
-    for url in SITE_LIST:
-        DRIVER.get(url)
-        dom = DRIVER.page_source
-        ad_blocker()
-        page_archiver(url)
-        web_hash_checker(url, INDEX, hashlib.md5(dom.encode("utf-8")))
-        # web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX, "archive/WebHash.Json")
-        # print(BeautifulSoup(dom).prettify())
-    # page_changes_listing(DOM_CHANGES)
-    show_webpage_code_diff(DOM_CHANGES)
-    # DRIVER.quit()
+
+def set_layout():
+    # All the stuff inside your window.
+
+    website_layout = [
+
+        [PySG.Text("Web Domains",
+                   size=(30, 1),
+                   font=("Helvetica", 25),
+                   pad=(10, 0),
+                   text_color="white")],
+
+        [PySG.InputText("Enter a Fully Qualified Domain Name",
+                        size=(65, 10),
+                        pad=(10, 0),
+                        key="-WEBSITE_NAME-"),
+
+         PySG.Button("Validate",
+                     size=(10, 1),
+                     key="-WEBSITE_VALIDATE-")],
+
+        [PySG.Listbox(values=[],
+                      size=(63, 15),
+                      pad=(10, 0),
+                      key="-WEBSITE_LISTBOX-"),
+
+         PySG.Column([[PySG.Button("Crawl",
+                                   size=(10, 1),
+                                   key="-WEBSITE_CRAWL-")],
+                      [PySG.Button("Delete",
+                                   size=(10, 1),
+                                   key="-WEBSITE_DELETE-")],
+                      [PySG.Button("Copy",
+                                   size=(10, 1),
+                                   key="-WEBSITE_COPY-")],
+                      [PySG.Button("Monitor",
+                                   size=(10, 1),
+                                   button_color="black on red3",
+                                   disabled=True,
+                                   key="-WEBSITE_MONITOR-")],
+                      ])
+         ],
+
+        [PySG.InputText(size=(64, 1),
+                        text_color="grey2",
+                        pad=(10, (10, 0)),
+                        disabled=True,
+                        key="-WEBSITE_FILENAME-"),
+
+         PySG.FileBrowse(size=(10, 1),
+                         pad=((5, 0), (5, 0)),
+                         file_types=(('ALL Files', '*.json'),))],
+
+        [PySG.Button("Upload",
+                     size=(10, 1),
+                     pad=(10, 10),
+                     key="-WEBSITE_UPLOAD-"),
+
+         PySG.Text("No index file uploaded...",
+                   pad=(5, 10),
+                   key="-WEBSITE_INDEX_INFO")],
+    ]
+
+    monitor_layout = [
+
+        [PySG.Text("Watcher",
+                   size=(30, 1),
+                   font=("Helvetica", 25),
+                   pad=(10, 0), text_color="white")],
+
+        [PySG.Table(values=[],
+                    headings=["Domain", "Hash", "Updated"],
+                    justification="left",
+                    alternating_row_color="grey8",
+                    auto_size_columns=False,
+                    def_col_width=5,
+                    col_widths=[22, 27, 15],
+                    expand_x=True,
+                    expand_y=True,
+                    enable_click_events=True,
+                    right_click_menu=["dd", ["Update", "Copy", "Info"]],
+                    key='-MONITOR_TABLE-')],
+
+        [PySG.Text("Filter: ",
+                   pad=((10, 0), (10, 0))),
+         PySG.InputText(size=(74, 1),
+                        pad=(10, (10, 0)),
+                        enable_events=True,
+                        key="-MONITOR_FILTER-")],
+
+        [PySG.Button("Update",
+                     size=(10, 1),
+                     pad=(10, 10),
+                     key="-MONITOR_UPDATE-"),
+
+         PySG.Button("Info",
+                     size=(10, 1),
+                     pad=(10, 10),
+                     key="-MONITOR_INFO-")],
+
+        [PySG.Button("Back",
+                     size=(10, 1),
+                     pad=(10, 10),
+                     key="-MONITOR_BACK-")]
+    ]
+
+    stats_layout = [
+        [PySG.Text("Statistics",
+                   size=(30, 1),
+                   font=("Helvetica", 25),
+                   pad=(10, 0), text_color="white")],
+        [PySG.Canvas(key='-CANVAS-')]]
+
+    tab_group = [
+        [PySG.TabGroup(
+            [[
+                PySG.Tab("           Website           ",
+                         website_layout,
+                         key="-WEBSITE_TAB-"),
+
+                PySG.Tab("           Monitor           ",
+                         monitor_layout,
+                         key="-MONITOR_TAB-",
+                         disabled=True),
+                PySG.Tab("           Statistics           ",
+                         stats_layout,
+                         key="-STATS_TAB-",
+                         disabled=False),
+            ]],
+            expand_y=True,
+            enable_events=True,
+            key='-TAB_GROUP-')]
+    ]
+
+    return tab_group
 
 
-def web_hash_checker(url, INDEX, md5):
-    digest = md5.hexdigest()
-    try:
-        if INDEX[url][0].strip('\n') != digest:
-            INDEX[url][0] = digest
-            print("Website does not match previous hash archive")  # Need user to accept before updating archive
-            Diff_url(url)  # function to run if hash is not the same
-        else:
-            print("Website match previous archive")
-            try:
-                if "archive\\" + DRIVER.title + "_new.html":
-                    os.remove("archive\\" + DRIVER.title + "_new.html")
-                    print(url + " archive will not change")
-            except FileNotFoundError:
-                print(url + " archive will not change")
-    except Exception as e:
-        # First time archiving
-        INDEX[url][0] = digest
-        print("New webpage archived")
-        times_url_change_dict[url] = 0
+def generate_gui(layout):
+    # Website Variables
 
+    # Monitor Variables
 
-def format_title(title):
-    title = title.replace("|", "")
-    return title
+    # Create the Window
+    window = PySG.Window(VERSION,
+                         layout,
+                         margins=(10, 5), finalize=True)
+    figure_agg = stats_graph.draw_figure(window['-CANVAS-'].TKCanvas, stats_graph.create_scatterplot())
 
+    while True:  # Event Loop
 
-def index_change_history(json_filename):
-    with open(json_filename, "r") as file:
-        try:
-            data = json.load(file)
-            for url, property in data['URLs'].items():
-                times_url_change_dict[url] = property['properties']['number of times URL content change']
-                # print(properties)
-        except Exception as e:
-            print(e)
-    return times_url_change_dict
+        event, values = window.read()
+        print(event, values)
+        if event == PySG.WIN_CLOSED or event == "Exit":
+            break
 
+        ################################################################################
+        # WEBSITE EVENTS                                                               #
+        ################################################################################
 
-def update_change_history(json_filename):
-    index_change_history(json_filename)
-    # print(times_url_change_dict)
-    for key in times_url_change_dict.keys():
-        if key in DOM_CHANGES:
-            times_url_change_dict[key] = times_url_change_dict.get(key, 0) + 1
-    # print(times_url_change_dict)
-
-
-def archive_updater(json_filename):
-    # with open("WebHash.txt", "w+") as wf:
-    print("Updating archive")
-    # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
-    JSON_values = []  # Archive web page hash
-    temp_dict = {'URLs': {}}
-    update_change_history(json_filename)
-    for key, val in INDEX.items():
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        changes_number = times_url_change_dict[key]
-        JSON_tuple = (key, val[0], now, changes_number)
-        JSON_values.append(JSON_tuple)
-    for val in JSON_values:
-        JSON_dict = json_construct(*val)
-        temp_dict['URLs'].update(JSON_dict)
-    update_json(json_filename, temp_dict)
-    for key in list(DOM_CHANGES.keys()):  # Archive web page code
-        # print(DOM_CHANGES.keys())
-        DRIVER.get(key)
-        page_title = format_title(DRIVER.title)
-        old = "archive\\" + page_title + ".html"
-        new = "archive\\" + page_title + "_new.html"
-        os.remove(old)
-        os.rename(new, "archive\\" + page_title + ".html")
-
-
-def json_construct(id, hash, date, times_it_changed):
-    website_dic = {id: {'properties': {}}}
-    values = [{'hash': hash}, {'archival_date': date}, {'number of times URL content change': times_it_changed}]
-    for val in values:
-        website_dic[id]['properties'].update(val)
-    return website_dic
-
-
-def update_json(filename, data_dict):
-    with open(filename, "r") as rfile:
-        archived_history = json.load(rfile)
-        for key, value in archived_history['URLs'].items():
-            if key in data_dict['URLs'].keys():
-                archived_history['URLs'][key] = data_dict['URLs'][key]
-        json_object = json.dumps(archived_history, indent=4)
-        rfile.close()
-    with open(filename, "w") as outfile:
-        outfile.write(json_object)
-
-
-def page_archiver(url):
-    # need to get code from URL first so that can compare later if there are any changes,
-    # it supports first time archiving also, you can run this on its own to archive html
-    page_source = DRIVER.page_source
-    page_title = format_title(DRIVER.title)
-    if not os.path.isfile("archive\\" + page_title + ".html"):
-        print('First time webpage code archive')
-        with open("archive\\" + page_title + ".html", "w+") as file:
-                file.write(page_source)
-    elif os.path.isfile("archive\\" + page_title + ".html"):
-        print('changed webpage code archived, will use it for comparison later')
-        with open("archive\\" + page_title + "_new.html", "w+") as file:
-            file.write(page_source)
-
-
-def show_webpage_code_diff(DOM_CHANGES):
-    if DOM_CHANGES:  # If there are any changes to any URLs (dictionary not empty)
-        print('There are ' + str(len(DOM_CHANGES)) + ' url/s with changes')
-        print('The URL/s with changes are:')
-        for key in DOM_CHANGES.keys():
-            print(key)
-        print('Here are the changes, there might be new content added or removed.:')
-        for key, value in DOM_CHANGES.items():
-            print('\n', key)
-            print("Original content:")
-            print(value[0])
-            print("Changed:")
-            print(value[1])
-    else:
-        print("there are no changes to any URLs")
-
-
-def Diff(old_file, new_file):  # diff with 2 files as arguments
-    try:
-        f_old = open(old_file)
-        list1 = f_old.readlines()
-        f_new = open(new_file)
-        list2 = f_new.readlines()
-        new_changed_list = []
-        changes_list = []
-        present_in_original_list = list(set(list1) - set(list2))
-        not_present_in_original_list = list(set(list2) - set(list1))
-            # changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
-
-        for change in present_in_original_list:
-                # arrange by closest match, however may also include stuff that is present in new/old but not in old/new
-
-            new_changed_list.append(" ".join(difflib.get_close_matches(change, not_present_in_original_list, 1)))
-            changes_list.append(present_in_original_list)  # element 0 = original
-            changes_list.append(new_changed_list)   # element 1 = changed
-            return changes_list
-    except Exception as e:
-        print(e)
-
-
-def Diff_url(url):  # same diff function but using url as arugement instead of 2 files
-    new_changed_list = []
-    changes_list = []
-    DRIVER.get(url)
-    webpage_title = format_title(DRIVER.title)
-    old = "archive\\" + webpage_title + ".html"
-    new = "archive\\" + webpage_title + "_new.html"
-    try:
-        # if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
-            f_old = open(old)
-            list1 = f_old.readlines()
-            f_new = open(new)
-            list2 = f_new.readlines()
-            present_in_original_list = list(set(list1) - set(list2))
-            not_present_in_original_list = list(set(list2) - set(list1))
-            for change in present_in_original_list:
-                # arrange by closest match, however may also include stuff that is present in new/old but not in old/new
-                new_changed_list.append(" ".join(difflib.get_close_matches(change, not_present_in_original_list, 1)))
-                changes_list.append(present_in_original_list)  # element 0 = original
-                changes_list.append(new_changed_list)  # element 1 = changed
-            DOM_CHANGES[url] = changes_list  # adding to the dom changes
-        # else:
-        #     print('relevant files does not exist for comparison, could be first time archiving webpage code')
-    except Exception as e:
-        print(e)
-
-
-def get_removed_content(changed_list, original_list):
-    empty_element = ''
-    indexes = [i for i in range(len(changed_list)) if changed_list[i] == empty_element]
-    if str(indexes) == '[]':
-        return False
-    elif str(indexes) != '[]':
-        selected_elements = [original_list[index] for index in indexes]
-        return selected_elements
-
-
-def get_added_content(changed_list, original_list):
-    empty_element = ''
-    indexes = [i for i in range(len(original_list)) if original_list[i] == empty_element]
-    if str(indexes) == '[]':
-        return False
-    elif str(indexes) != '[]':
-        selected_elements = [changed_list[index] for index in indexes]
-        return selected_elements
-
-
-def page_changes_listing(DOM_CHANGES):
-    show_webpage_code_diff(DOM_CHANGES)
-    userinput = input("Do you accept these changes? y/n")  # only when user accepts, then the archive up beu updated
-    if userinput.lower() == "y":
-        archive_updater("archive\WebHash.Json")
-    if userinput.lower() == "n":
-        print("changes discarded")
-
-
-def ad_blocker():
-    all_iframes = DRIVER.find_elements(By.TAG_NAME, "iframe")
-    if len(all_iframes) > 0:
-        print("Ad Found, changes detected may contain ads\n")
-        DRIVER.execute_script("""
-            var elems = document.getElementsByTagName("iframe"); 
-            for(var i = 0, max = elems.length; i < max; i++)
-                 {
-                     elems[i].hidden=true;
-                 }
-                              """)
-
-
-def report_generation(DOM_CHANGES):
-    if not os.path.isdir("Reports\\"):
-        os.mkdir("Reports\\")
-    date_time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    date_time_write = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    with open("Reports\\Report_" + date_time_now + ".txt", "w") as rf:
-        rf.write("URLs checked at: " + date_time_write + "\n")
-        for url in INDEX.keys():
-            rf.write(url + '\n')
-            if url in DOM_CHANGES.keys():
-                rf.write("Approved changes not in whitelist:\n")
-                rf.write("Original content: " + str(DOM_CHANGES[url][0]) + "\n")
-                rf.write("Changed/removed content: " + str(DOM_CHANGES[url][1]) + "\n")
-                if get_removed_content(DOM_CHANGES[url][1], DOM_CHANGES[url][0]) is not False:
-                    rf.write("Content Removed: " + str(get_removed_content(DOM_CHANGES[url][1], DOM_CHANGES[url][0])))
-                    rf.write("\n")
+        if event == "-WEBSITE_VALIDATE-":
+            if vad.is_valid_url(values["-WEBSITE_NAME-"]):
+                window["-WEBSITE_NAME-"].update(text_color="green4")
+                indexer.add(INDEX, values["-WEBSITE_NAME-"])
+                window["-WEBSITE_LISTBOX-"].update(sorted(INDEX.keys()))
+                if INDEX.keys():
+                    window["-WEBSITE_MONITOR-"].update(
+                        button_color="white on green4", disabled=False)
+                else:
+                    window["-WEBSITE_MONITOR-"].update(
+                        button_color="white on red3", disabled=True)
             else:
-                rf.write("No content changes to URL" + "\n")
-            rf.write("Number of times URL content changed up to this point:" + str(times_url_change_dict[url]) + "\n\n")
+                window["-WEBSITE_NAME-"].update("Invalid "
+                                                "Domain Name",
+                                                text_color="red2")
+        if event == "-WEBSITE_CRAWL-":
+            pass
 
-    rf.close()
+        if event == "-WEBSITE_DELETE-":
+            try:
+                indexer.delete(INDEX,
+                               window["-WEBSITE_LISTBOX-"].get_list_values()
+                               [window["-WEBSITE_LISTBOX-"].get_indexes()[0]])
+
+                window["-WEBSITE_LISTBOX-"].update(sorted(INDEX.keys()))
+                if INDEX.keys():
+                    window["-WEBSITE_MONITOR-"].update(
+                        button_color="white on green4", disabled=False)
+                else:
+                    window["-WEBSITE_MONITOR-"].update(
+                        button_color="white on red3", disabled=True)
+            except IndexError:
+                pass
+
+        if event == "-WEBSITE_COPY-":
+            try:
+                pyperclip.copy(window["-WEBSITE_LISTBOX-"].get_list_values()
+                               [window["-WEBSITE_LISTBOX-"].get_indexes()[0]])
+            except IndexError:
+                pass
+
+        if event == "-WEBSITE_MONITOR-":
+            for domain in window["-WEBSITE_LISTBOX-"].get_list_values():
+                indexer.add(INDEX, domain)
+
+            window['-MONITOR_TABLE-'].update(values=indexer.table(INDEX))
+
+            window['-MONITOR_TAB-'].update(disabled=False)
+            window['-TAB_GROUP-'].Widget.select(1)
+            window['-WEBSITE_TAB-'].update(disabled=True)
+
+        if event == "-WEBSITE_UPLOAD-":
+            try:
+                if parse_json.json_verifier(values["-WEBSITE_FILENAME-"],
+                                            decryption_password=123, ):
+
+                    INDEX.update(parse_json.json_hash_indexer(
+                        values["-WEBSITE_FILENAME-"]))
+
+                    window["-WEBSITE_LISTBOX-"].update(sorted(INDEX.keys()))
+                    window["-WEBSITE_INDEX_INFO"]. \
+                        update("VALID INDEX FILE UPLOADED!",
+                               text_color="green4")
+                    if INDEX.keys():
+                        window["-WEBSITE_MONITOR-"].update(
+                            button_color="white on green4", disabled=False)
+                    else:
+                        window["-WEBSITE_MONITOR-"].update(
+                            button_color="red3", disabled=True)
+                else:
+                    window["-WEBSITE_INDEX_INFO"]. \
+                        update("INVALID INDEX FILE!", text_color="Red2")
+            except FileNotFoundError:
+                window["-WEBSITE_INDEX_INFO"]. \
+                    update("INDEX FILE NOT FOUND!", text_color="Red2")
+
+        ################################################################################
+        # MONITOR EVENTS                                                               #
+        ################################################################################
+        if event[0] == "-MONITOR_TABLE-" and event[1] == "+CLICKED+":
+            if event[2][0] == -1 and event[2][1] != -1:
+                window['-MONITOR_TABLE-'].update(values=indexer.sort_table(
+                    window['-MONITOR_TABLE-'].get(), event[2][1]))
+
+        if values['-MONITOR_FILTER-'] != '':
+            filter_list = []
+            for row in indexer.table(INDEX):
+                if values['-MONITOR_FILTER-'] in " ".join(row):
+                    filter_list.append(row)
+            window['-MONITOR_TABLE-'].update(filter_list)
+        else:
+            window['-MONITOR_TABLE-'].update(indexer.table(INDEX))
+        if event == "-MONITOR_UPDATE-":
+            # print(window['-MONITOR_TABLE-'].get())
+            Watcher_Cleanup.INDEX = INDEX
+            Watcher_Cleanup.single_check(INDEX.keys())
+            Watcher_Cleanup.archive_updater("archive/WebHash.Json")
+            INDEX.update(parse_json.json_hash_indexer("archive/WebHash.Json"))
+            print(INDEX)
+            if figure_agg:
+                stats_graph.delete_fig_agg(figure_agg)
+                figure_agg = stats_graph.draw_figure(window['-CANVAS-'].TKCanvas, stats_graph.create_scatterplot())
+            print("finish")
+
+            pass
+        if event == "-MONITOR_INFO-":
+            pass
+
+        if event == "-MONITOR_BACK-":
+            window['-WEBSITE_TAB-'].update(disabled=False)
+            window['-TAB_GROUP-'].Widget.select(0)
+            window['-MONITOR_TAB-'].update(disabled=True)
 
 
-def white_list_input():  # likely store in a file then retrieve the contents during check
-    pass
+
+#######################################################################################
+# STATS EVENTS                                                               #
+#######################################################################################
 
 
-def white_list_check(whitelist):
-    pass
 
 
-def periodic_check(time_interval_in_seconds):
-    print("Polling every " + str(time_interval_in_seconds) + " seconds")
-    while True:
-        try:
-
-            json_hash_indexer()
-            get_web_source(SITE)
-            # report_generation(DOM_CHANGES)
-            print("finish execution round, waiting interval....To stop just close this program")
-            time.sleep(time_interval_in_seconds)
-        except Exception as e:
-            print(e)
 
 
-def single_check(SITE_LIST):
-    try:
-        # json_hash_indexer()
-        get_web_source(SITE_LIST)
-        # report_generation(DOM_CHANGES)
-    except Exception as e:
-        print(e)
+################################################################################
 
 
-def clean_urls(url_list):
-    regex = re.compile(
-        r'^.*\.(?!js$|ico$|atom$|png$)[^.]+$')  # remove non-webpages
-    filtered = [i for i in url_list if regex.match(i)]
-    return filtered
+################################################################################
+# TESTS                                                                        #
+################################################################################
+def test_func():
+    return True
 
 
+def test():
+    if test_func():
+        return True
+    # print("All Testing Completed Successfully!")
+
+
+################################################################################
+# MAIN                                                                         #
+################################################################################
 def main():
-    # json_hash_indexer()
-    # # url_crawled = crawler.Crawler('https://plainvanilla.com.sg/')
-    # get_web_source()
-    # archive_updater()
-    # page_changes_listing(DOM_CHANGES)
-    # print(DOM_CHANGES)
-    # print(clean_urls(list((url_crawled.crawled_urls))))
-    # key = encrpyt_decrypt.derive_key(encrpyt_decrypt.generate_salt(), APP_PASSWORD)
-    # base64.urlsafe_b64encode(key)
-    # update_change_history()
-    site_list = ['https://time.gov/', 'https://www.ledr.com/colours/white.htm', 'http://randomcolour.com/']
-    userinput = input("Press 1 for single check and 2 for periodic check:")
-    if userinput == '1':
-        single_check(site_list)
-        # report_generation(DOM_CHANGES)
-        DRIVER.quit()
 
-    elif userinput == '2':
-        time_interval = int(input("Enter time check interval (in seconds):"))
-        periodic_check(time_interval)
-        # report_generation(DOM_CHANGES)
+    if test():
+        # STYLE
+
+        PySG.theme("DarkGrey11")
+        PySG.set_options(font=("Arial", 12))
+
+        # MAIN
+
+        generate_gui(set_layout())
 
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
