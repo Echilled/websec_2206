@@ -36,28 +36,24 @@ def json_hash_indexer():
 def get_web_source(SITE_LIST):
     for url in SITE_LIST:
         DRIVER.get(url)
-        ad_blocker()
         dom = DRIVER.page_source
-        print(url, DRIVER.title)
-        page_archiver(DRIVER.page_source, DRIVER.title)
-        # need to get code from URL first so that can compare later if there are any changes,
-        # it supports first time archiving also, you can run this on its own to archive html
-
-        web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX, "archive/WebHash.Json")
+        ad_blocker()
+        page_archiver(url)
+        web_hash_checker(url, INDEX, hashlib.md5(dom.encode("utf-8")))
+        # web_hash_checker(url, hashlib.md5(dom.encode("utf-8")), INDEX, "archive/WebHash.Json")
         # print(BeautifulSoup(dom).prettify())
     # page_changes_listing(DOM_CHANGES)
     show_webpage_code_diff(DOM_CHANGES)
     # DRIVER.quit()
 
 
-def web_hash_checker(url, md5, INDEX, json_file):
+def web_hash_checker(url, INDEX, md5):
     digest = md5.hexdigest()
     try:
         if INDEX[url][0].strip('\n') != digest:
             INDEX[url][0] = digest
             print("Website does not match previous hash archive")  # Need user to accept before updating archive
-            page_checker(url)  # function to run if hash is not the same
-            # archive_updater()
+            Diff_url(url)  # function to run if hash is not the same
         else:
             print("Website match previous archive")
             try:
@@ -71,7 +67,6 @@ def web_hash_checker(url, md5, INDEX, json_file):
         INDEX[url][0] = digest
         print("New webpage archived")
         times_url_change_dict[url] = 0
-        # archive_updater(json_file)
 
 
 def format_title(title):
@@ -146,12 +141,15 @@ def update_json(filename, data_dict):
         outfile.write(json_object)
 
 
-def page_archiver(page_source, page_title):
-    page_title = format_title(page_title)
+def page_archiver(url):
+    # need to get code from URL first so that can compare later if there are any changes,
+    # it supports first time archiving also, you can run this on its own to archive html
+    page_source = DRIVER.page_source
+    page_title = format_title(DRIVER.title)
     if not os.path.isfile("archive\\" + page_title + ".html"):
         print('First time webpage code archive')
         with open("archive\\" + page_title + ".html", "w+") as file:
-            file.write(page_source)
+                file.write(page_source)
     elif os.path.isfile("archive\\" + page_title + ".html"):
         print('changed webpage code archived, will use it for comparison later')
         with open("archive\\" + page_title + "_new.html", "w+") as file:
@@ -171,49 +169,56 @@ def show_webpage_code_diff(DOM_CHANGES):
             print(value[0])
             print("Changed:")
             print(value[1])
-            print("Removed content:")
-            if (get_removed_content(value[1], value[0])) is False:
-                print("There is no removed content")
-            else:
-                print(get_removed_content(value[1], value[0]))
     else:
         print("there are no changes to any URLs")
 
 
-def Diff(list1, list2):
+def Diff(old_file, new_file):  # diff with 2 files as arguments
+    try:
+        f_old = open(old_file)
+        list1 = f_old.readlines()
+        f_new = open(new_file)
+        list2 = f_new.readlines()
+        new_changed_list = []
+        changes_list = []
+        present_in_original_list = list(set(list1) - set(list2))
+        not_present_in_original_list = list(set(list2) - set(list1))
+            # changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
+
+        for change in present_in_original_list:
+                # arrange by closest match, however may also include stuff that is present in new/old but not in old/new
+
+            new_changed_list.append(" ".join(difflib.get_close_matches(change, not_present_in_original_list, 1)))
+            changes_list.append(present_in_original_list)  # element 0 = original
+            changes_list.append(new_changed_list)   # element 1 = changed
+            return changes_list
+    except Exception as e:
+        print(e)
+
+
+def Diff_url(url):  # same diff function but using url as arugement instead of 2 files
     new_changed_list = []
     changes_list = []
-    present_in_original_list = list(set(list1) - set(list2))
-    not_present_in_original_list = list(set(list2) - set(list1))
-    # changes_list = list(set(li1) - set(li2)) + list(set(li2) - set(li1))
-    for change in present_in_original_list:
-        # arrange by closest match, however may also include stuff that is present in new/old but not in old/new
-        new_changed_list.append(" ".join(difflib.get_close_matches(change, not_present_in_original_list, 1)))
-    # print(previous_list)
-    # print(new_changed_list)
-    changes_list.append(present_in_original_list)
-    changes_list.append(new_changed_list)
-    return changes_list
-
-
-def show_difference(old_file, new_file):
-    f_old = open(old_file)
-    old_text = f_old.readlines()
-    f_new = open(new_file)
-    new_text = f_new.readlines()
-    return Diff(old_text, new_text)
-
-
-def page_checker(url):
     DRIVER.get(url)
     webpage_title = format_title(DRIVER.title)
     old = "archive\\" + webpage_title + ".html"
     new = "archive\\" + webpage_title + "_new.html"
     try:
-        if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
-            DOM_CHANGES[url] = show_difference(old, new)
-        else:
-            print('relevant files does not exist for comparison, could be first time archiving webpage code')
+        # if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
+            f_old = open(old)
+            list1 = f_old.readlines()
+            f_new = open(new)
+            list2 = f_new.readlines()
+            present_in_original_list = list(set(list1) - set(list2))
+            not_present_in_original_list = list(set(list2) - set(list1))
+            for change in present_in_original_list:
+                # arrange by closest match, however may also include stuff that is present in new/old but not in old/new
+                new_changed_list.append(" ".join(difflib.get_close_matches(change, not_present_in_original_list, 1)))
+                changes_list.append(present_in_original_list)  # element 0 = original
+                changes_list.append(new_changed_list)  # element 1 = changed
+            DOM_CHANGES[url] = changes_list  # adding to the dom changes
+        # else:
+        #     print('relevant files does not exist for comparison, could be first time archiving webpage code')
     except Exception as e:
         print(e)
 
@@ -245,11 +250,6 @@ def page_changes_listing(DOM_CHANGES):
         archive_updater("archive\WebHash.Json")
     if userinput.lower() == "n":
         print("changes discarded")
-
-
-# print('If you want to accept all changes, press 0')
-# decision = input('Enter you choice')
-# print(decision)
 
 
 def ad_blocker():
@@ -313,7 +313,7 @@ def periodic_check(time_interval_in_seconds):
 def single_check(SITE_LIST):
     try:
         # json_hash_indexer()
-        get_web_source(list(SITE_LIST))
+        get_web_source(SITE_LIST)
         # report_generation(DOM_CHANGES)
     except Exception as e:
         print(e)
@@ -337,9 +337,10 @@ def main():
     # key = encrpyt_decrypt.derive_key(encrpyt_decrypt.generate_salt(), APP_PASSWORD)
     # base64.urlsafe_b64encode(key)
     # update_change_history()
+    site_list = ['https://time.gov/', 'https://www.ledr.com/colours/white.htm', 'http://randomcolour.com/']
     userinput = input("Press 1 for single check and 2 for periodic check:")
     if userinput == '1':
-        single_check(SITE)
+        single_check(site_list)
         # report_generation(DOM_CHANGES)
         DRIVER.quit()
 
