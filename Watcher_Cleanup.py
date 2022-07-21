@@ -89,7 +89,6 @@ def index_change_history(json_filename):
 
 
 def update_change_history(json_filename):
-    index_change_history(json_filename)
     # print(times_url_change_dict)
     for key in times_url_change_dict.keys():
         if key in DOM_CHANGES:
@@ -97,30 +96,29 @@ def update_change_history(json_filename):
     # print(times_url_change_dict)
 
 
-def archive_updater(json_filename):
-    # with open("WebHash.txt", "w+") as wf:
-    print("Updating archive")
-    # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
-    JSON_values = []  # Archive web page hash
-    temp_dict = {'URLs': {}}
-    update_change_history(json_filename)
-    for key, val in INDEX.items():
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        changes_number = times_url_change_dict[key]
-        JSON_tuple = (key, val[0], now, changes_number)
-        JSON_values.append(JSON_tuple)
-    for val in JSON_values:
-        JSON_dict = json_construct(*val)
-        temp_dict['URLs'].update(JSON_dict)
-    update_json(json_filename, temp_dict)
+def page_source_updater():
     for key in list(DOM_CHANGES.keys()):  # Archive web page code
         # print(DOM_CHANGES.keys())
         DRIVER.get(key)
         page_title = format_title(DRIVER.title)
         old = "archive\\" + page_title + ".html"
         new = "archive\\" + page_title + "_new.html"
-        os.remove(old)
-        os.rename(new, "archive\\" + page_title + ".html")
+        try:
+            if new:
+                os.remove(old)
+                os.rename(new, "archive\\" + page_title + ".html")
+        except:
+            pass
+
+
+def archive_updater(json_filename):
+    # with open("WebHash.txt", "w+") as wf:
+    print("Updating archive")
+    # wf.writelines("\n".join(','.join((key,val)) for (key,val) in INDEX.items()))
+    index_change_history(json_filename)
+    update_change_history(json_filename)
+    update_json(json_filename)
+    page_source_updater()
 
 
 def json_construct(id, hash, date, times_it_changed):
@@ -131,12 +129,22 @@ def json_construct(id, hash, date, times_it_changed):
     return website_dic
 
 
-def update_json(filename, data_dict):
+def update_json(filename):
+    JSON_values = []  # Archive web page hash
+    temp_dict = {'URLs': {}}
+    for key, val in INDEX.items():
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        changes_number = times_url_change_dict[key]
+        JSON_tuple = (key, val[0], now, changes_number)
+        JSON_values.append(JSON_tuple)
+    for val in JSON_values:
+        JSON_dict = json_construct(*val)
+        temp_dict['URLs'].update(JSON_dict)
     with open(filename, "r") as rfile:
         archived_history = json.load(rfile)
         for key, value in archived_history['URLs'].items():
-            if key in data_dict['URLs'].keys():
-                archived_history['URLs'][key] = data_dict['URLs'][key]
+            if key in temp_dict['URLs'].keys():
+                archived_history['URLs'][key] = temp_dict['URLs'][key]
         json_object = json.dumps(archived_history, indent=4)
         rfile.close()
     with open(filename, "w") as outfile:
@@ -152,7 +160,7 @@ def page_archiver(url):
     if not os.path.isfile("archive\\" + page_title + ".html"):
         print('First time webpage code archive')
         with open("archive\\" + page_title + ".html", "w+") as file:
-                file.write(page_source)
+            file.write(page_source)
     elif os.path.isfile("archive\\" + page_title + ".html"):
         print('changed webpage code archived, will use it for comparison later')
         with open("archive\\" + page_title + "_new.html", "w+") as file:
@@ -207,7 +215,7 @@ def Diff_url(url):  # same diff function but using url as arugement instead of 2
     old = "archive\\" + webpage_title + ".html"
     new = "archive\\" + webpage_title + "_new.html"
     try:
-        # if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive
+        if os.path.isfile(old) and os.path.isfile(new):  # If files exist in the archive then compare
             f_old = open(old)
             list1 = f_old.readlines()
             f_new = open(new)
