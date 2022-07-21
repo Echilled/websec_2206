@@ -45,6 +45,7 @@ def get_web_source(SITE_LIST):
 
 
 def web_hash_checker(url, INDEX):
+    print(url)
     DRIVER.get(url)
     ad_blocker()
     dom = DRIVER.page_source
